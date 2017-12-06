@@ -1,10 +1,11 @@
-package com.ucla.zxxia.activitytracker;
+package ucla.nesl.ActivityLabeling;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
  * Created by zxxia on 12/3/17.
+ * Data structure used to pass activity information between activities.
  */
 
 public class ActivityDetail implements Parcelable {
@@ -55,4 +56,4 @@ public class ActivityDetail implements Parcelable {
             return new ActivityDetail[size];
         }
     };
-};
+}

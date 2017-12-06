@@ -1,4 +1,4 @@
-package com.ucla.zxxia.activitytracker;
+package ucla.nesl.zxxia.ActivityLabeling;
 
 import org.junit.Test;
 

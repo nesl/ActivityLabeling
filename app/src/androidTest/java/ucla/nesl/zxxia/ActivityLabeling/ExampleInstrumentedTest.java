@@ -1,4 +1,4 @@
-package com.ucla.zxxia.activitytracker;
+package ucla.nesl.zxxia.ActivityLabeling;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

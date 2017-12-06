@@ -1,14 +1,12 @@
-package com.ucla.zxxia.activitytracker;
+package ucla.nesl.ActivityLabeling;
 
-import android.Manifest;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.ServiceConnection;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -19,7 +17,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -33,8 +30,8 @@ public class ActivityEditor extends AppCompatActivity {
     private String mLocation = "";
     private String mMicroLocation = "";
     private String mType = "";
-    // Acquire a reference to the system Location Manager
-    private LocationManager mLocationManager;
+    private LocationService mLocationSerivce;
+    private boolean mBound = false;
 
 
 
@@ -48,10 +45,7 @@ public class ActivityEditor extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
-
-
         prepareStartTime();
-        prepareLocation();
         prepareSpinner(R.id.MicrolocsSp, R.array.microlocations_array);
         prepareSpinner(R.id.ActivityTypesSp, R.array.activityTypes_array);
 
@@ -72,6 +66,51 @@ public class ActivityEditor extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Bind to LocationService
+        Intent intent = new Intent(this, LocationService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        Log.i("ActivityEditor", "bindService in start");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unbindService(mConnection);
+        mBound = false;
+    }
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            LocationService.LocationBinder binder = (LocationService.LocationBinder) service;
+            mLocationSerivce = binder.getService();
+
+            Location curLocation = mLocationSerivce.getLocation();
+            TextView locView = findViewById(R.id.LocValTV);
+            mLocation =  "(" + Double.toString(curLocation.getLatitude()) + ", " + Double.toString(curLocation.getLongitude())+")";
+            locView.setText(mLocation);
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
+
 
     private void prepareStartTime() {
         SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss MM/dd/yyyy", Locale.US);
@@ -80,48 +119,9 @@ public class ActivityEditor extends AppCompatActivity {
         startTimeTV.setText(formattedTime);
     }
 
-    private void prepareLocation() {
-        mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        if (mLocationManager != null) {
-            boolean isGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            if (!isGPSEnabled) {
-                Log.i("ActivityEditor", "Please enable gps provider.");
-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivity(intent);
-            }
-
-            Location location = null;
-
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION},
-                        Constants.PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
-
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET},
-                        Constants.PERMISSIONS_REQUEST_CODE_INTERNET);
-                return;
-            }
-            if (isGPSEnabled) {
-                location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                Log.i("ActivityEditor", "Obtain location from gps provider.");
-            } else {
-                Toast.makeText(this, "Fail to obtain last Known Location", Toast.LENGTH_LONG).show();
-            }
-            if (location != null) {
-                mLocation = "(" + Double.toString(location.getLatitude()) + ", " + Double.toString(location.getLongitude())+")";
-                System.out.println(mLocation);
-                TextView locationTv = findViewById(R.id.LocValTV);
-                locationTv.setText(mLocation);
-            }
-        } else {
-            Toast.makeText(this, "Fail to obtain location service", Toast.LENGTH_LONG).show();
-        }
-    }
 
     private void prepareSpinner(final int spinnerID, int stringArrayID) {
-        Spinner sp = (Spinner) findViewById(spinnerID);
+        Spinner sp = findViewById(spinnerID);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 stringArrayID, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -146,36 +146,5 @@ public class ActivityEditor extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-    }
-
-
-    @Override
-    protected void onStart() {
-        Log.i("EditorActivity", "OnStart");
-        super.onStart();
-    }
-
-    @Override
-    protected void onResume() {
-        Log.i("EditorActivity", "OnResume");
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.i("EditorActivity", "OnPause");
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.i("EditorActivity", "OnStop");
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        Log.i("EditorActivity", "OnDestroy");
-        super.onDestroy();
     }
 }

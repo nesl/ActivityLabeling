@@ -1,15 +1,11 @@
-package com.ucla.zxxia.activitytracker;
+package ucla.nesl.ActivityLabeling;
 
 /**
  * Created by zxxia on 12/3/17.
+ * Constant class provides constants may used across in the app.
  */
 
 class Constants {
-    static final String START_TIME = "Start Time";
-    static final String LOCATION = "Location";
-    static final String MICROLOCATION = "Microlocation";
-    static final String TYPE = "Activity Type";
-    static final String DESCRIPTION = "Description";
     static final String ACTIVITY_INFO = "Activity Info";
 
     static final int ACTIVITY_EDITOR_RESULT_REQUEST_CODE = 0;

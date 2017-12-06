@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.ucla.zxxia.activitytracker.ActivityEditor"
+    tools:context="ucla.nesl.ActivityLabeling.ActivityEditor"
     tools:showIn="@layout/activity_editor">
 
     <TextView
@@ -111,6 +111,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="4dp"
         android:textSize="@dimen/font_size"
+        android:inputType="text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/DescriptionTv" />
 

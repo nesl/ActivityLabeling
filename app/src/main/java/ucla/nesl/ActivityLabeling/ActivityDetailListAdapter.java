@@ -1,4 +1,4 @@
-package com.ucla.zxxia.activitytracker;
+package ucla.nesl.ActivityLabeling;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -19,12 +19,19 @@ import java.util.List;
 
 /**
  * Created by zxxia on 12/3/17.
+ * Class to construct the activity list in main activity.
  */
 
 public class ActivityDetailListAdapter extends BaseAdapter {
     private Context mContext;
     private List<ActivityDetail> mList;
     private LayoutInflater mInflater;
+
+    private static final String START_TIME = "Start Time";
+    private static final String LOCATION = "Location";
+    private static final String MICROLOCATION = "Microlocation";
+    private static final String TYPE = "Activity Type";
+    private static final String DESCRIPTION = "Description";
 
     ActivityDetailListAdapter(Context context, List<ActivityDetail> actsList) {
         mContext = context;
@@ -54,36 +61,28 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         @SuppressLint("ViewHolder") View rowView = mInflater.inflate(R.layout.list_item_activitydetaillist, parent, false);
 
         TextView startTV = rowView.findViewById(R.id.startTV);
-
-
         TextView locTV = rowView.findViewById(R.id.locTV);
-
-
         TextView ulocTV = rowView.findViewById(R.id.ulocTV);
-
-
         TextView typeTV = rowView.findViewById(R.id.typeTV);
-
-
         TextView dscrpTV = rowView.findViewById(R.id.dscrpTV);
 
         final ActivityDetail actInfo = (ActivityDetail) getItem(position);
 
         String timeString = DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(actInfo.m_start)).toString();
 
-        String content = Constants.START_TIME + ": " + timeString;
+        String content = START_TIME + ": " + timeString;
         startTV.setText(content);
 
-        content = Constants.LOCATION + ": " + actInfo.m_loc;
+        content = LOCATION + ": " + actInfo.m_loc;
         locTV.setText(content);
 
-        content = Constants.MICROLOCATION + ": " + actInfo.m_uloc;
+        content = MICROLOCATION + ": " + actInfo.m_uloc;
         ulocTV.setText(content);
 
-        content = Constants.TYPE + ": " + actInfo.m_type;
+        content = TYPE + ": " + actInfo.m_type;
         typeTV.setText(content);
 
-        content = Constants.DESCRIPTION + ": " + actInfo.m_dscrp;
+        content = DESCRIPTION + ": " + actInfo.m_dscrp;
         dscrpTV.setText(content);
 
         final Chronometer chronometer = rowView.findViewById(R.id.durationChrom);

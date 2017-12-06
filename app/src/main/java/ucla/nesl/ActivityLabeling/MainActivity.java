@@ -1,9 +1,12 @@
-package com.ucla.zxxia.activitytracker;
+package ucla.nesl.ActivityLabeling;
 
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -32,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        permissionCheck();
 
         if (savedInstanceState != null) {
             // Restore value of members from saved state
@@ -41,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
             // Probably initialize members with default values for a new instance
             Log.i("MainActivity", "create a new list");
         }
+
+        startService(new Intent(this, LocationService.class));
 
 
         final ListView actsListView = findViewById(R.id.ActivitiesListView);
@@ -60,6 +66,25 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void permissionCheck() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION},
+                    Constants.PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
+
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET},
+                    Constants.PERMISSIONS_REQUEST_CODE_INTERNET);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopService(new Intent(this, LocationService.class));
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
@@ -74,43 +99,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
         }
 
-    }
-
-
-    @Override
-    protected void onStart() {
-        Log.i("MainActivity", "OnStart");
-        super.onStart();
-    }
-
-    @Override
-    protected void onResume() {
-        Log.i("MainActivity", "OnResume");
-        super.onResume();
-    }
-
-    @Override
-    protected void onRestart() {
-        Log.i("MainActivity", "OnRestart");
-        super.onRestart();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.i("MainActivity", "OnPause");
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.i("MainActivity", "OnStop");
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        Log.i("MainActivity", "OnDestroy");
-        super.onDestroy();
     }
 
     @Override
