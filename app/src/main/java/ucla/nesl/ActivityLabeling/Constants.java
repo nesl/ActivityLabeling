@@ -11,5 +11,6 @@ class Constants {
     static final int ACTIVITY_EDITOR_RESULT_REQUEST_CODE = 0;
     static final int PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION = 1;
     static final int PERMISSIONS_REQUEST_CODE_INTERNET = 2;
+    static final int PERMISSIONS_REQUEST_CODE_EXTERNAL_STORAGE = 3;
 
 }

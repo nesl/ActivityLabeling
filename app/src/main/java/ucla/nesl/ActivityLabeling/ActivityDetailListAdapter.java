@@ -2,8 +2,10 @@ package ucla.nesl.ActivityLabeling;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +15,10 @@ import android.widget.Chronometer;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -106,6 +112,25 @@ public class ActivityDetailListAdapter extends BaseAdapter {
                 if (actInfo.m_end == -1) {
                     actInfo.m_end = Calendar.getInstance().getTime().getTime();
                     chronometer.stop();
+
+                    if (isExternalStorageWritable()){
+                        String filename = "log.csv";
+                        String string = Long.toString(actInfo.m_start) + ',' +
+                                Long.toString(actInfo.m_end) + ',' + actInfo.m_loc + ',' +
+                                actInfo.m_uloc + ',' + actInfo.m_type + ',' + actInfo.m_dscrp + '\n';
+                        //Log.e("Save file", Environment.getExternalStorageDirectory().getAbsolutePath());
+                        File file = new File(getStorageDir(v.getContext().getString(R.string.app_name)), filename);
+
+                        FileOutputStream stream;
+                        try{
+                            stream = new FileOutputStream(file, true);
+                            stream.write(string.getBytes());
+                            stream.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
                 } else {
                     Toast.makeText(v.getContext(), "Activity has already been stopped!", Toast.LENGTH_LONG).show();
                 }
@@ -114,5 +139,23 @@ public class ActivityDetailListAdapter extends BaseAdapter {
 
         return rowView;
     }
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
 
+    public File getStorageDir(String appname) {
+        // Get the directory for the user's public pictures directory.
+        File dir = new File(Environment.getExternalStorageDirectory(), appname);
+        if (!dir.exists()) {
+            boolean success = dir.mkdirs();
+            if (!success) {
+                Log.e("Save file", "mkdirs failed");
+            }
+        }
+        return dir;
+    }
 }
+
+
