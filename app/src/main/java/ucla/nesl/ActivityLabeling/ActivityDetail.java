@@ -11,15 +11,17 @@ import android.os.Parcelable;
 public class ActivityDetail implements Parcelable {
     long m_start;
     long m_end;
-    String m_loc;
+    double m_latitude;
+    double m_longitude;
     String m_uloc;
     String m_type;
     String m_dscrp;
 
-    ActivityDetail(long start, long end, String loc, String uloc, String type, String dscrp) {
+    ActivityDetail(long start, long end, double latitude, double longitude, String uloc, String type, String dscrp) {
         this.m_start = start;
         this.m_end = end;
-        this.m_loc = loc;
+        this.m_latitude = latitude;
+        this.m_longitude = longitude;
         this.m_uloc = uloc;
         this.m_type = type;
         this.m_dscrp = dscrp;
@@ -32,7 +34,8 @@ public class ActivityDetail implements Parcelable {
     private ActivityDetail(Parcel in) {
         m_start = in.readLong();
         m_end = in.readLong();
-        m_loc = in.readString();
+        m_latitude = in.readDouble();
+        m_longitude = in.readDouble();
         m_uloc = in.readString();
         m_type = in.readString();
         m_dscrp = in.readString();
@@ -41,7 +44,8 @@ public class ActivityDetail implements Parcelable {
     public void writeToParcel(Parcel out, int flags) {
         out.writeLong(m_start);
         out.writeLong(m_end);
-        out.writeString(m_loc);
+        out.writeDouble(m_latitude);
+        out.writeDouble(m_longitude);
         out.writeString(m_uloc);
         out.writeString(m_type);
         out.writeString(m_dscrp);

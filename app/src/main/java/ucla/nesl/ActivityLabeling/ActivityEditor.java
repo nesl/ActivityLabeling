@@ -26,24 +26,29 @@ import java.util.Locale;
 
 public class ActivityEditor extends AppCompatActivity {
 
-    private Date mStartTime = Calendar.getInstance().getTime();
+    private static final String TAG = ActivityEditor.class.getSimpleName();
+
+    private Date mStartTime;
     private String mLocation = "";
     private String mMicroLocation = "";
     private String mType = "";
-    private LocationService mLocationSerivce;
-    private boolean mBound = false;
+
+    //private LocationService mLocationSerivce;
+    //private boolean mBound = false;
 
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i("EditorActivity", "OnCreate");
+        Log.i(TAG, "OnCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Please input activity information");
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+
+        mStartTime = Calendar.getInstance().getTime();
 
         prepareStartTime();
         prepareSpinner(R.id.MicrolocsSp, R.array.microlocations_array);
@@ -59,7 +64,7 @@ public class ActivityEditor extends AppCompatActivity {
                 description = findViewById(R.id.DescriptionET);
 
                 myIntent.putExtra(Constants.ACTIVITY_INFO, new ActivityDetail(mStartTime.getTime(),
-                        -1 , mLocation, mMicroLocation, mType, description.getText().toString()));
+                        -1 , -1, -1, mMicroLocation, mType, description.getText().toString()));
                 setResult(RESULT_OK, myIntent);
                 finish();//finishing activity
             }
@@ -69,10 +74,11 @@ public class ActivityEditor extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
         // Bind to LocationService
-        Intent intent = new Intent(this, LocationService.class);
+        /*Intent intent = new Intent(this, LocationService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        Log.i("ActivityEditor", "bindService in start");
+        Log.i("ActivityEditor", "bindService in start");*/
     }
 
     @Override
@@ -84,12 +90,12 @@ public class ActivityEditor extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        unbindService(mConnection);
-        mBound = false;
+        //unbindService(mConnection);
+        //mBound = false;
     }
 
     /** Defines callbacks for service binding, passed to bindService() */
-    private ServiceConnection mConnection = new ServiceConnection() {
+    /*private ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName className,
@@ -109,7 +115,7 @@ public class ActivityEditor extends AppCompatActivity {
         public void onServiceDisconnected(ComponentName arg0) {
             mBound = false;
         }
-    };
+    };*/
 
 
     private void prepareStartTime() {

@@ -32,17 +32,24 @@ public class ActivityDetailListAdapter extends BaseAdapter {
     private Context mContext;
     private List<ActivityDetail> mList;
     private LayoutInflater mInflater;
+    private ActivityStorageManager mStore;
 
+
+    /**
+     * TextView Lables
+     */
     private static final String START_TIME = "Start Time";
     private static final String LOCATION = "Location";
     private static final String MICROLOCATION = "Microlocation";
     private static final String TYPE = "Activity Type";
     private static final String DESCRIPTION = "Description";
 
-    ActivityDetailListAdapter(Context context, List<ActivityDetail> actsList) {
+    ActivityDetailListAdapter(Context context, List<ActivityDetail> actsList, ActivityStorageManager actStoreMngr) {
         mContext = context;
         mList = actsList;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mStore = actStoreMngr;
+
     }
 
 
@@ -53,7 +60,9 @@ public class ActivityDetailListAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        return mList.get(position);
+
+        // Display items in from  new(top) to old(bottom)
+        return mList.get(getCount() - 1 - position);
     }
 
     @Override
@@ -75,11 +84,16 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         final ActivityDetail actInfo = (ActivityDetail) getItem(position);
 
         String timeString = DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(actInfo.m_start)).toString();
-
         String content = START_TIME + ": " + timeString;
         startTV.setText(content);
 
-        content = LOCATION + ": " + actInfo.m_loc;
+
+        content = LOCATION + ": ";
+        if (actInfo.m_latitude == -1 || actInfo.m_longitude == -1) {
+            content += "N/A";
+        } else {
+            content += actInfo.m_latitude + " ," +actInfo. m_longitude;
+        }
         locTV.setText(content);
 
         content = MICROLOCATION + ": " + actInfo.m_uloc;
@@ -105,7 +119,10 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         }
 
 
-        Button stopBtn = rowView.findViewById(R.id.stopBtn);
+        final Button stopBtn = rowView.findViewById(R.id.stopBtn);
+        if (actInfo.m_end != -1) {
+            stopBtn.setEnabled(false);
+        }
         stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -113,49 +130,17 @@ public class ActivityDetailListAdapter extends BaseAdapter {
                     actInfo.m_end = Calendar.getInstance().getTime().getTime();
                     chronometer.stop();
 
-                    if (isExternalStorageWritable()){
-                        String filename = "log.csv";
-                        String string = Long.toString(actInfo.m_start) + ',' +
-                                Long.toString(actInfo.m_end) + ',' + actInfo.m_loc + ',' +
-                                actInfo.m_uloc + ',' + actInfo.m_type + ',' + actInfo.m_dscrp + '\n';
-                        //Log.e("Save file", Environment.getExternalStorageDirectory().getAbsolutePath());
-                        File file = new File(getStorageDir(v.getContext().getString(R.string.app_name)), filename);
-
-                        FileOutputStream stream;
-                        try{
-                            stream = new FileOutputStream(file, true);
-                            stream.write(string.getBytes());
-                            stream.close();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                } else {
-                    Toast.makeText(v.getContext(), "Activity has already been stopped!", Toast.LENGTH_LONG).show();
+                    mStore.saveOneActivity(actInfo);
+                    stopBtn.setEnabled(false);
                 }
             }
         });
 
         return rowView;
     }
-    /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        return Environment.MEDIA_MOUNTED.equals(state);
-    }
 
-    public File getStorageDir(String appname) {
-        // Get the directory for the user's public pictures directory.
-        File dir = new File(Environment.getExternalStorageDirectory(), appname);
-        if (!dir.exists()) {
-            boolean success = dir.mkdirs();
-            if (!success) {
-                Log.e("Save file", "mkdirs failed");
-            }
-        }
-        return dir;
-    }
+
+
 }
 
 
