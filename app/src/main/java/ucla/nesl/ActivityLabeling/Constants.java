@@ -7,4 +7,5 @@ package ucla.nesl.ActivityLabeling;
 
 class Constants {
     static final String ACTIVITY_INFO = "Activity Info";
+    static final String CURRENT_LOCATION = "Current Location";
 }

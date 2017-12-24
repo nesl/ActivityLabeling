@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+        >
+        <EditText
+            android:id="@+id/customET"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="Type New Selection..."
+            android:inputType="text"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:imeOptions="actionDone"/>
+
+        <Button
+            android:id="@+id/customAddBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/customET"
+            android:layout_alignBottom="@+id/customET"
+            android:layout_alignParentEnd="true"
+            android:text="Add"/>
+    </RelativeLayout>
+
+
+    <ListView
+        android:id="@+id/dialogLV"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </ListView>
+
+</LinearLayout>

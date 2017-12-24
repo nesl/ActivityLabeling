@@ -2,10 +2,8 @@ package ucla.nesl.ActivityLabeling;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +11,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -39,17 +32,21 @@ public class ActivityDetailListAdapter extends BaseAdapter {
      * TextView Lables
      */
     private static final String START_TIME = "Start Time";
-    private static final String LOCATION = "Location";
+    private static final String END_TIME = "End Time";
+    private static final String START_LOCATION = "Start Location";
+    private static final String END_LOCATION = "End Location";
     private static final String MICROLOCATION = "Microlocation";
     private static final String TYPE = "Activity Type";
     private static final String DESCRIPTION = "Description";
+
+
+
 
     ActivityDetailListAdapter(Context context, List<ActivityDetail> actsList, ActivityStorageManager actStoreMngr) {
         mContext = context;
         mList = actsList;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mStore = actStoreMngr;
-
     }
 
 
@@ -75,11 +72,15 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         // Get view for row item
         @SuppressLint("ViewHolder") View rowView = mInflater.inflate(R.layout.list_item_activitydetaillist, parent, false);
 
-        TextView startTV = rowView.findViewById(R.id.startTV);
-        TextView locTV = rowView.findViewById(R.id.locTV);
-        TextView ulocTV = rowView.findViewById(R.id.ulocTV);
-        TextView typeTV = rowView.findViewById(R.id.typeTV);
-        TextView dscrpTV = rowView.findViewById(R.id.dscrpTV);
+
+
+        final TextView startTV = rowView.findViewById(R.id.startTV);
+        final TextView endTV = rowView.findViewById(R.id.endTV);
+        final TextView startLocTV = rowView.findViewById(R.id.startLocTV);
+        final TextView endLocTV = rowView.findViewById(R.id.endLocTV);
+        final TextView ulocTV = rowView.findViewById(R.id.ulocTV);
+        final TextView typeTV = rowView.findViewById(R.id.typeTV);
+        final TextView dscrpTV = rowView.findViewById(R.id.dscrpTV);
 
         final ActivityDetail actInfo = (ActivityDetail) getItem(position);
 
@@ -88,13 +89,33 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         startTV.setText(content);
 
 
-        content = LOCATION + ": ";
+        if (actInfo.m_end == -1) {
+            timeString = "N/A";
+        } else {
+            timeString = DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(actInfo.m_end)).toString();
+        }
+        content = END_TIME + ": " + timeString;
+        endTV.setText(content);
+
+
+        content = START_LOCATION + ": ";
         if (actInfo.m_latitude == -1 || actInfo.m_longitude == -1) {
             content += "N/A";
         } else {
             content += actInfo.m_latitude + " ," +actInfo. m_longitude;
         }
-        locTV.setText(content);
+        startLocTV.setText(content);
+
+        content = END_LOCATION + ": ";
+
+        if (actInfo.m_latitude == -1 || actInfo.m_longitude == -1) {
+            content += "N/A";
+        } else {
+            content += actInfo.m_latitude + " ," +actInfo. m_longitude;
+        }
+        endLocTV.setText(content);
+
+
 
         content = MICROLOCATION + ": " + actInfo.m_uloc;
         ulocTV.setText(content);
@@ -122,16 +143,24 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         final Button stopBtn = rowView.findViewById(R.id.stopBtn);
         if (actInfo.m_end != -1) {
             stopBtn.setEnabled(false);
+            stopBtn.setVisibility(View.GONE);
         }
         stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (actInfo.m_end == -1) {
                     actInfo.m_end = Calendar.getInstance().getTime().getTime();
+
+                    String content = END_TIME + ": " + DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(actInfo.m_end)).toString();
+                    endTV.setText(content);
+
                     chronometer.stop();
+                    long elapsedRealtimeOffset = actInfo.m_end - SystemClock.elapsedRealtime();
+                    chronometer.setBase(actInfo.m_start - elapsedRealtimeOffset);
 
                     mStore.saveOneActivity(actInfo);
                     stopBtn.setEnabled(false);
+                    stopBtn.setVisibility(View.GONE);
                 }
             }
         });

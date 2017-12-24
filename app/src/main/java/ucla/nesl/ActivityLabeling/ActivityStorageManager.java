@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -21,7 +22,10 @@ import java.util.List;
 public class ActivityStorageManager {
     private static final String TAG = ActivityStorageManager.class.getSimpleName();
     private Context m_context;
-    private String filename = "log.csv";
+    private static final String usrActLog = "log.csv";
+    private static final String usrUlocLog = "uloc.txt";
+    private static final String usrActTypeLog = "type.txt";
+
 
     ActivityStorageManager(Context context) {
         m_context = context;
@@ -41,7 +45,7 @@ public class ActivityStorageManager {
 
             Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
 
-            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), filename);
+            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), usrActLog);
 
             FileOutputStream stream;
             try{
@@ -58,7 +62,7 @@ public class ActivityStorageManager {
         if (isExternalStorageWritable()){
 
             Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
-            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), filename);
+            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), usrActLog);
             FileOutputStream outputStream;
             try{
                 outputStream = new FileOutputStream(file, true);
@@ -86,7 +90,7 @@ public class ActivityStorageManager {
     ArrayList<ActivityDetail> getActivityLogs() {
         ArrayList<ActivityDetail> resultList  = new ArrayList<>();
         if (isExternalStorageWritable()) {
-            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), filename);
+            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), usrActLog);
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String csvLine;
@@ -107,8 +111,45 @@ public class ActivityStorageManager {
                 //You'll need to add proper error handling here
             }
         }
-
         return resultList;
+    }
+
+    private ArrayList<String> load(String filename) {
+        ArrayList<String> resultList  = new ArrayList<>();
+        if (isExternalStorageWritable()) {
+            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), filename);
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    Log.i(TAG, line);
+                    resultList.add(line);
+                }
+                br.close();
+            }
+            catch (IOException e) {
+                //You'll need to add proper error handling here
+            }
+        }
+        return resultList;
+    }
+
+    public ArrayList<String> loadUsrUlocs() {
+        return load(usrUlocLog);
+    }
+
+    public ArrayList<String> loadUsrActTpyes() {
+        return load(usrActTypeLog);
+    }
+
+    void saveUsrUloc(ArrayList<String> items) {
+        writeToFile(usrUlocLog, items, false);
+    }
+
+
+
+    void saveUserActType( ArrayList<String> items) {
+        writeToFile(usrActTypeLog, items, false);
     }
 
     /* Checks if external storage is available for read and write */
@@ -127,5 +168,22 @@ public class ActivityStorageManager {
             }
         }
         return dir;
+    }
+
+    private void writeToFile(String filename, ArrayList<String> items, Boolean append) {
+        if (isExternalStorageWritable()){
+            Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
+            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), filename);
+            FileOutputStream stream;
+            try{
+                stream = new FileOutputStream(file, append);
+                for (int i = 0; i < items.size(); i++) {
+                    stream.write((items.get(i)+'\n').getBytes());
+                }
+                stream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

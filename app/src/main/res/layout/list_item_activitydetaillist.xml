@@ -12,6 +12,16 @@
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp" />
+
+    <TextView
+        android:id="@+id/endTV"
+        android:textSize="@dimen/font_size"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -37,8 +47,18 @@
     </LinearLayout>
 
 
+
     <TextView
-        android:id="@+id/locTV"
+        android:id="@+id/startLocTV"
+        android:textSize="@dimen/font_size"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        />
+    <TextView
+        android:id="@+id/endLocTV"
         android:textSize="@dimen/font_size"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

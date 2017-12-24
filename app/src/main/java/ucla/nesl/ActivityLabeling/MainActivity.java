@@ -23,6 +23,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -158,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
         if (actsList == null) {
             actsList = new ArrayList<>();
             //display saved records within 24 hours
-            actsList = m_store.getActivityLogs();
+            //actsList = m_store.getActivityLogs();
         }
         mActivityListAdapter = new ActivityDetailListAdapter(this, actsList, m_store);
         mActivitiesListView.setAdapter(mActivityListAdapter);
@@ -168,13 +169,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Log.i(TAG, "Create a new activity log");
                 Intent intent = new Intent(getApplicationContext(), ActivityEditor.class);
+                intent.putExtra(Constants.CURRENT_LOCATION, mCurrentLocation);
                 startActivityForResult(intent, ACTIVITY_EDITOR_RESULT_REQUEST_CODE);
             }
         });
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mSettingsClient = LocationServices.getSettingsClient(this);
-
 
         createLocationCallback();
         createLocationRequest();
@@ -217,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-
         //Save all unfinished activities to storage
         m_store.saveActivities(actsList);
         super.onDestroy();
@@ -291,8 +291,6 @@ public class MainActivity extends AppCompatActivity {
      * Removes location updates from the FusedLocationApi.
      */
     private void stopLocationUpdates() {
-
-
         // It is a good practice to remove location requests when the activity is in a paused or
         // stopped state. Doing so helps battery performance and is especially
         // recommended in applications that request frequent location updates.
@@ -408,7 +406,6 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "Create LocationCallback");
         mLocationCallback = new LocationCallback() {
 
-
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
@@ -423,8 +420,16 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 mActivityListAdapter.notifyDataSetChanged();
-                //Toast.makeText(getApplicationContext(), mCurrentLocation.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), mCurrentLocation.toString(), Toast.LENGTH_LONG).show();
                 Log.i(TAG, "Received Location Update");
+            }
+
+            @Override
+            public void onLocationAvailability(LocationAvailability locationAvailability) {
+                super.onLocationAvailability(locationAvailability);
+                if (!locationAvailability.isLocationAvailable()) {
+                    Toast.makeText(getApplicationContext(), "Current Location cannot be determined.", Toast.LENGTH_LONG).show();
+                }
             }
         };
     }
@@ -456,7 +461,7 @@ public class MainActivity extends AppCompatActivity {
         // application will never receive updates faster than this value.
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
 
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
 
