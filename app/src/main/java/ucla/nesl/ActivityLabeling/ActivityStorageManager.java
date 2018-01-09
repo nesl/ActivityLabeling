@@ -32,16 +32,13 @@ public class ActivityStorageManager {
     }
 
     void saveOneActivity(ActivityDetail actInfo) {
-        if (actInfo.m_end == -1) {
+        if (!actInfo.isStopped()) {
             // Activity is not stopped yet.
             return;
         }
 
         if (isExternalStorageWritable()){
-            String string = Long.toString(actInfo.m_start) + ',' + Long.toString(actInfo.m_end) + ',' +
-                            Double.toString(actInfo.m_latitude) + ',' + Double.toString(actInfo.m_longitude) + ',' +
-                            actInfo.m_uloc + ',' + actInfo.m_type + ',' +
-                            actInfo.m_dscrp + '\n';
+            String string = actInfo.toCSVLine();
 
             Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
 
@@ -69,15 +66,11 @@ public class ActivityStorageManager {
 
                 for (int i = 0; i < actsList.size(); i++) {
                     ActivityDetail actInfo = actsList.get(i);
-                    if (actInfo.m_end != -1) {
-                        continue;
-                    }
-                    String string = Long.toString(actInfo.m_start) + ',' + Long.toString(Calendar.getInstance().getTime().getTime()) + ',' +
-                            Double.toString(actInfo.m_latitude) + ',' + Double.toString(actInfo.m_longitude) + ',' +
-                            actInfo.m_uloc + ',' + actInfo.m_type + ',' +
-                            actInfo.m_dscrp + '\n';
+                    if (actInfo.isStopped()) {
 
-                    outputStream.write(string.getBytes());
+                        String string = actInfo.toCSVLine();
+                        outputStream.write(string.getBytes());
+                    }
                 }
 
                 outputStream.close();
@@ -99,9 +92,10 @@ public class ActivityStorageManager {
                     Log.i(TAG, csvLine);
                     long startTime = Long.valueOf(row[0]);
                     if (startTime >= Calendar.getInstance().getTime().getTime() - 24 * 3600 * 1000) {
-                        ActivityDetail actInfo  = new ActivityDetail(startTime,
-                                Long.valueOf(row[1]), Double.valueOf(row[2]),
-                                Double.valueOf(row[3]), row[4], row[5], row[6]);
+                        ActivityDetail actInfo  = new ActivityDetail(startTime, Long.valueOf(row[1]),
+                                Double.valueOf(row[2]), Double.valueOf(row[3]),
+                                Double.valueOf(row[4]), Double.valueOf(row[5]),
+                                row[6], row[7], row[8]);
                         resultList.add(actInfo);
                     }
                 }

@@ -3,7 +3,6 @@ package ucla.nesl.ActivityLabeling;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.SystemClock;
-import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +12,6 @@ import android.widget.Chronometer;
 import android.widget.TextView;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -27,26 +25,18 @@ public class ActivityDetailListAdapter extends BaseAdapter {
     private LayoutInflater mInflater;
     private ActivityStorageManager mStore;
 
+    private LocationService mService;
 
-    /**
-     * TextView Lables
-     */
-    private static final String START_TIME = "Start Time";
-    private static final String END_TIME = "End Time";
-    private static final String START_LOCATION = "Start Location";
-    private static final String END_LOCATION = "End Location";
-    private static final String MICROLOCATION = "Microlocation";
-    private static final String TYPE = "Activity Type";
-    private static final String DESCRIPTION = "Description";
-
-
-
-
-    ActivityDetailListAdapter(Context context, List<ActivityDetail> actsList, ActivityStorageManager actStoreMngr) {
+    ActivityDetailListAdapter(Context context, List<ActivityDetail> actsList, ActivityStorageManager actStoreMngr, LocationService service) {
         mContext = context;
         mList = actsList;
         mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mStore = actStoreMngr;
+        mService = service;
+    }
+
+    public void updateService(LocationService service){
+        mService = service;
     }
 
 
@@ -84,79 +74,64 @@ public class ActivityDetailListAdapter extends BaseAdapter {
 
         final ActivityDetail actInfo = (ActivityDetail) getItem(position);
 
-        String timeString = DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(actInfo.m_start)).toString();
-        String content = START_TIME + ": " + timeString;
+
+        String content = Utils.timeToString(actInfo.getStartTime());
         startTV.setText(content);
 
-
-        if (actInfo.m_end == -1) {
-            timeString = "N/A";
-        } else {
-            timeString = DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(actInfo.m_end)).toString();
-        }
-        content = END_TIME + ": " + timeString;
+        content = Utils.timeToString(actInfo.getEndTime());
         endTV.setText(content);
 
 
-        content = START_LOCATION + ": ";
-        if (actInfo.m_latitude == -1 || actInfo.m_longitude == -1) {
-            content += "N/A";
-        } else {
-            content += actInfo.m_latitude + " ," +actInfo. m_longitude;
-        }
+        content = Utils.locToString(actInfo.getStartLatitude(), actInfo.getStartLongitude());
         startLocTV.setText(content);
 
-        content = END_LOCATION + ": ";
-
-        if (actInfo.m_latitude == -1 || actInfo.m_longitude == -1) {
-            content += "N/A";
-        } else {
-            content += actInfo.m_latitude + " ," +actInfo. m_longitude;
-        }
+        content = Utils.locToString(actInfo.getEndLatitude(), actInfo.getEndLatitude());
         endLocTV.setText(content);
 
-
-
-        content = MICROLOCATION + ": " + actInfo.m_uloc;
+        content = actInfo.getMicrolocation();
         ulocTV.setText(content);
 
-        content = TYPE + ": " + actInfo.m_type;
+        content = actInfo.getActType();
         typeTV.setText(content);
 
-        content = DESCRIPTION + ": " + actInfo.m_dscrp;
+        content = actInfo.getDescription();
         dscrpTV.setText(content);
 
         final Chronometer chronometer = rowView.findViewById(R.id.durationChrom);
 
-        if (actInfo.m_end == -1) {
+        if (!actInfo.isStopped()) {
             // end time is not set so keep counting time
             long elapsedRealtimeOffset = System.currentTimeMillis() - SystemClock.elapsedRealtime();
-            chronometer.setBase(actInfo.m_start - elapsedRealtimeOffset);
+            chronometer.setBase(actInfo.getStartTime() - elapsedRealtimeOffset);
             chronometer.start();
         } else {
             // end time is set already, just calculate the duration
-            long elapsedRealtimeOffset = actInfo.m_end - SystemClock.elapsedRealtime();
-            chronometer.setBase(actInfo.m_start - elapsedRealtimeOffset);
+            long elapsedRealtimeOffset = actInfo.getEndTime() - SystemClock.elapsedRealtime();
+            chronometer.setBase(actInfo.getStartTime() - elapsedRealtimeOffset);
         }
 
 
         final Button stopBtn = rowView.findViewById(R.id.stopBtn);
-        if (actInfo.m_end != -1) {
+        if (actInfo.isStopped()) {
             stopBtn.setEnabled(false);
             stopBtn.setVisibility(View.GONE);
         }
         stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (actInfo.m_end == -1) {
-                    actInfo.m_end = Calendar.getInstance().getTime().getTime();
+                if (!actInfo.isStopped()) {
+                    actInfo.setEndTime(Calendar.getInstance().getTime().getTime());
 
-                    String content = END_TIME + ": " + DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(actInfo.m_end)).toString();
+                    String content = Utils.timeToString(actInfo.getEndTime());
                     endTV.setText(content);
 
+                    actInfo.setEndLocation(mService.getCurrentLocation());
+                    content = Utils.locToString(actInfo.getStartLatitude(),actInfo.getEndLongitude());
+                    endLocTV.setText(content);
+
                     chronometer.stop();
-                    long elapsedRealtimeOffset = actInfo.m_end - SystemClock.elapsedRealtime();
-                    chronometer.setBase(actInfo.m_start - elapsedRealtimeOffset);
+                    long elapsedRealtimeOffset = actInfo.getEndTime() - SystemClock.elapsedRealtime();
+                    chronometer.setBase(actInfo.getStartTime() - elapsedRealtimeOffset);
 
                     mStore.saveOneActivity(actInfo);
                     stopBtn.setEnabled(false);
@@ -167,9 +142,6 @@ public class ActivityDetailListAdapter extends BaseAdapter {
 
         return rowView;
     }
-
-
-
 }
 
 

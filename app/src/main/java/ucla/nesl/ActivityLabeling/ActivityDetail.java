@@ -1,5 +1,6 @@
 package ucla.nesl.ActivityLabeling;
 
+import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -9,22 +10,121 @@ import android.os.Parcelable;
  */
 
 public class ActivityDetail implements Parcelable {
-    long m_start;
-    long m_end;
-    double m_latitude;
-    double m_longitude;
-    String m_uloc;
-    String m_type;
-    String m_dscrp;
 
-    ActivityDetail(long start, long end, double latitude, double longitude, String uloc, String type, String dscrp) {
-        this.m_start = start;
-        this.m_end = end;
-        this.m_latitude = latitude;
-        this.m_longitude = longitude;
-        this.m_uloc = uloc;
-        this.m_type = type;
-        this.m_dscrp = dscrp;
+    private long m_start = -1;
+    private long m_end = -1;
+    private double m_start_latitude = -1;
+    private double m_start_longitude = -1;
+    private double m_end_latitude = -1;
+    private double m_end_longitude = -1;
+    private String m_uloc = "";
+    private String m_type = "";
+    private String m_dscrp = "";
+
+    ActivityDetail() {
+    }
+    ActivityDetail(long start, long end,
+                   double start_latitude, double start_longitude,
+                   double end_latitude, double end_longitude,
+                   String uloc, String type, String dscrp) {
+        m_start = start;
+        m_end = end;
+        m_start_latitude = start_latitude;
+        m_start_longitude = start_longitude;
+        m_end_latitude = end_latitude;
+        m_end_longitude = end_longitude;
+        m_uloc = uloc;
+        m_type = type;
+        m_dscrp = dscrp;
+
+    }
+
+    public boolean isStopped() {
+        return m_end != -1;
+    }
+
+    public long getStartTime() {
+        return m_start;
+    }
+
+    public long getEndTime() {
+        return m_end;
+    }
+
+    public double getStartLatitude() {
+        return m_start_latitude;
+    }
+
+    public double getStartLongitude() {
+        return m_start_longitude;
+    }
+
+    public double getEndLatitude() {
+        return m_end_latitude;
+    }
+
+    public double getEndLongitude() {
+        return m_end_longitude;
+    }
+
+    public String getMicrolocation() {
+        return m_uloc;
+    }
+
+    public String getActType() {
+        return m_type;
+    }
+
+    public String getDescription() {
+        return m_dscrp;
+    }
+
+    public void setStartTime(long t) {
+        m_start = t;
+    }
+
+    public void setEndTime(long t) {
+        m_end = t;
+    }
+
+    public void setStartLocation(Location loc) {
+        if (loc != null) {
+            m_start_latitude = loc.getLatitude();
+            m_start_longitude = loc.getLongitude();
+        }
+    }
+
+    public void setEndLocation(Location loc) {
+        if (loc != null) {
+            m_end_latitude = loc.getLatitude();
+            m_end_longitude = loc.getLongitude();
+        }
+    }
+
+    public void setMicrolocation(String uloc) {
+        if (uloc != null) {
+            m_uloc= uloc;
+        }
+    }
+
+    public void setActType(String type) {
+        if (type != null) {
+            m_type = type;
+        }
+    }
+
+    public void setDescription(String description){
+        if (description != null) {
+            m_dscrp = description;
+        }
+    }
+
+    public String toCSVLine() {
+        return  Long.toString(m_start) + ',' + Long.toString(m_end) + ',' +
+                Double.toString(m_start_latitude) + ',' + Double.toString(m_start_longitude) + ',' +
+                Double.toString(m_end_latitude) + ',' + Double.toString(m_end_longitude) + ',' +
+                m_uloc + ',' + m_type + ',' +
+                m_dscrp + '\n';
     }
 
     public int describeContents() {
@@ -32,20 +132,26 @@ public class ActivityDetail implements Parcelable {
     }
 
     private ActivityDetail(Parcel in) {
+
         m_start = in.readLong();
         m_end = in.readLong();
-        m_latitude = in.readDouble();
-        m_longitude = in.readDouble();
+        m_start_latitude = in.readDouble();
+        m_start_longitude = in.readDouble();
+        m_end_latitude = in.readDouble();
+        m_end_longitude = in.readDouble();
         m_uloc = in.readString();
         m_type = in.readString();
         m_dscrp = in.readString();
     }
 
     public void writeToParcel(Parcel out, int flags) {
+
         out.writeLong(m_start);
         out.writeLong(m_end);
-        out.writeDouble(m_latitude);
-        out.writeDouble(m_longitude);
+        out.writeDouble(m_start_latitude);
+        out.writeDouble(m_start_longitude);
+        out.writeDouble(m_end_latitude);
+        out.writeDouble(m_end_longitude);
         out.writeString(m_uloc);
         out.writeString(m_type);
         out.writeString(m_dscrp);

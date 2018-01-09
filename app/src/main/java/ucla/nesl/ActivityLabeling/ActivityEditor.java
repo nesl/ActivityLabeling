@@ -32,6 +32,7 @@ import java.util.Objects;
 public class ActivityEditor extends AppCompatActivity {
 
     private static final String TAG = ActivityEditor.class.getSimpleName();
+    static final String ACTIVITY_INFO = "Activity Info";
 
     /**
      * Keys for storing activity state in the Bundle.
@@ -40,7 +41,6 @@ public class ActivityEditor extends AppCompatActivity {
     private static final String KEY_USR_ACT_TYPE_LIST = "User Activity Type Items";
 
     private Date mStartTime;
-    private String mLocation;
     private String mMicroLocation;
     private String mType;
 
@@ -49,10 +49,7 @@ public class ActivityEditor extends AppCompatActivity {
 
     private ActivityStorageManager mStoreManager;
 
-    //private LocationService mLocationSerivce;
-    //private boolean mBound = false;
-
-
+    Location mCurLoc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,8 +61,10 @@ public class ActivityEditor extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
+        mCurLoc = getIntent().getExtras().getParcelable(MainActivity.CURRENT_LOCATION);
 
-        //TODO: updateValuesFromBundle(savedInstanceState);
+
+        updateValuesFromBundle(savedInstanceState);
         mStoreManager = new ActivityStorageManager(this);
         if (mUsrActTypes == null) {
             mUsrActTypes = mStoreManager.loadUsrActTpyes();
@@ -94,11 +93,6 @@ public class ActivityEditor extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         Log.i(TAG, "OnStart");
-
-        // Bind to LocationService
-        /*Intent intent = new Intent(this, LocationService.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        Log.i("ActivityEditor", "bindService in start");*/
     }
 
     @Override
@@ -111,8 +105,6 @@ public class ActivityEditor extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        //unbindService(mConnection);
-        //mBound = false;
     }
 
     @Override
@@ -154,47 +146,23 @@ public class ActivityEditor extends AppCompatActivity {
         }
     }
 
-    /** Defines callbacks for service binding, passed to bindService() */
-    /*private ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            LocationService.LocationBinder binder = (LocationService.LocationBinder) service;
-            mLocationSerivce = binder.getService();
-
-            Location curLocation = mLocationSerivce.getLocation();
-            TextView locView = findViewById(R.id.LocValTV);
-            mLocation =  "(" + Double.toString(curLocation.getLatitude()) + ", " + Double.toString(curLocation.getLongitude())+")";
-            locView.setText(mLocation);
-            mBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
-        }
-    };*/
-
 
     private void prepareStartTime() {
         mStartTime = Calendar.getInstance().getTime();
-        SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss MM/dd/yyyy", Locale.US);
-        String formattedTime = df.format(mStartTime);
+        String formattedTime = Utils.timeToString(mStartTime.getTime());
         TextView startTimeTV = findViewById(R.id.StartTimeValTV);
         startTimeTV.setText(formattedTime);
     }
 
     private void prepareStartLocation() {
-        Location curLoc = getIntent().getExtras().getParcelable(Constants.CURRENT_LOCATION);
-        if (curLoc == null) {
-            mLocation = "N/A";
+        String content;
+        if (mCurLoc == null) {
+            content = Utils.locToString(-1, -1);
         } else {
-            mLocation = String.valueOf(curLoc.getLatitude()) + ", " + String.valueOf(curLoc.getLatitude());
+            content = Utils.locToString(mCurLoc.getLatitude(), mCurLoc.getLatitude());
         }
         TextView startLocTV = findViewById(R.id.LocValTV);
-        startLocTV.setText(mLocation);
+        startLocTV.setText(content);
     }
 
 
@@ -215,15 +183,11 @@ public class ActivityEditor extends AppCompatActivity {
                     case R.id.MicrolocsSp:
                         if (!selection.equalsIgnoreCase("Select a microlocation")) {
                             mMicroLocation = selection;
-                        } else {
-                            mMicroLocation = "N/A";
                         }
                         break;
                     case R.id.ActivityTypesSp:
                         if (!selection.equalsIgnoreCase("Select an activity type")) {
                             mType = selection;
-                        } else {
-                            mType = "N/A";
                         }
                         break;
                     default:
@@ -268,8 +232,13 @@ public class ActivityEditor extends AppCompatActivity {
                 EditText description;
                 description = findViewById(R.id.DescriptionET);
 
-                myIntent.putExtra(Constants.ACTIVITY_INFO, new ActivityDetail(mStartTime.getTime(),
-                        -1 , -1, -1, mMicroLocation, mType, description.getText().toString()));
+                ActivityDetail act = new ActivityDetail();
+                act.setStartTime(mStartTime.getTime());
+                act.setStartLocation(mCurLoc);
+                act.setMicrolocation(mMicroLocation);
+                act.setActType(mType);
+                act.setDescription(description.getText().toString());
+                myIntent.putExtra(ACTIVITY_INFO, act);
                 setResult(RESULT_OK, myIntent);
                 finish();//finishing activity
             }
@@ -280,5 +249,4 @@ public class ActivityEditor extends AppCompatActivity {
         CustomDialog customDialog = CustomDialog.newInstance(items);
         customDialog.show(getSupportFragmentManager(), "Custom Dialog");
     }
-
 }

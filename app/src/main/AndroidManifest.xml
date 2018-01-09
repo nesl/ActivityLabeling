@@ -40,6 +40,10 @@
                 android:value="ucla.nesl.ActivityLabeling.MainActivity" />
         </activity>
 
+        <service
+            android:name=".LocationService"
+            android:enabled="true"
+            android:exported="true" />
 
     </application>
 
