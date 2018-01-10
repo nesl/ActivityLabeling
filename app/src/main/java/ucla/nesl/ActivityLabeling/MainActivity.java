@@ -2,11 +2,10 @@ package ucla.nesl.ActivityLabeling;
 
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -15,7 +14,6 @@ import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -25,6 +23,11 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -33,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
+    private static final long DETECTION_INTERVAL_IN_MILLISECONDS = 10000;
 
     /**
      *  Constants for Activity Result Code
@@ -44,8 +48,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION = 1;
     private static final int PERMISSIONS_REQUEST_CODE_EXTERNAL_STORAGE = 3;
-
-
 
     /**
      * Keys for storing activity state in the Bundle.
@@ -72,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     // The BroadcastReceiver used to listen from broadcasts from the service.
-    private MyReceiver myReceiver;
+    //private MyReceiver myReceiver;
 
     // A reference to the service used to get location updates.
     private LocationService mService = null;
@@ -106,6 +108,11 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityStorageManager mStoreManager;
 
+    /**
+     * The entry point for interacting with activity recognition.
+     */
+    private ActivityRecognitionClient mActivityRecognitionClient;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
         if (actsList == null) {
             actsList = new ArrayList<>();
             //display saved records within 24 hours
-            //actsList = m_store.getActivityLogs();
+            actsList = mStoreManager.getActivityLogs();
         }
         mActivityListAdapter = new ActivityDetailListAdapter(this, actsList, mStoreManager, mService);
         mActivitiesListView.setAdapter(mActivityListAdapter);
@@ -142,7 +149,9 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, ACTIVITY_EDITOR_RESULT_REQUEST_CODE);
             }
         });
-        myReceiver = new MyReceiver();
+
+        mActivityRecognitionClient = new ActivityRecognitionClient(this);
+        sendActivityUpdatesRequest();
     }
 
     @Override
@@ -168,8 +177,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Bind to the service. If the service is in foreground mode, this signals to the service
         // that since this activity is in the foreground, the service can exit foreground mode.
-        LocalBroadcastManager.getInstance(this).registerReceiver(myReceiver,
-                new IntentFilter(LocationService.ACTION_BROADCAST));
+        //LocalBroadcastManager.getInstance(this).registerReceiver(myReceiver,
+          //      new IntentFilter(LocationService.ACTION_BROADCAST));
     }
 
     @Override
@@ -185,18 +194,11 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
     }
 
-    @Override
-    protected void onPause() {
-        // Remove location updates to save battery.
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(myReceiver);
-        Log.i(TAG, "onPause");
-        super.onPause();
-    }
 
     @Override
     protected void onDestroy() {
         //Save all unfinished activities to storage
-        mStoreManager.saveActivities(actsList);
+        mStoreManager.saveOngoingActivities(actsList);
         super.onDestroy();
         Log.i(TAG, "onDestroy");
     }
@@ -219,7 +221,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 
     private boolean checkLocationPermission() {
         int fineLocationPermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
@@ -335,17 +336,76 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
+
     /**
-     * Receiver for broadcasts sent by {@link LocationService}.
+     * Registers for activity recognition updates using
+     * {@link ActivityRecognitionClient#requestActivityUpdates(long, PendingIntent)}.
+     * Registers success and failure callbacks.
      */
-    private class MyReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Location location = intent.getParcelableExtra(LocationService.EXTRA_LOCATION);
-            if (location != null) {
-                //Toast.makeText(MainActivity.this, location.toString(),Toast.LENGTH_SHORT).show();
-                mCurrentLocation = location;
+    private void sendActivityUpdatesRequest() {
+
+        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
+                DETECTION_INTERVAL_IN_MILLISECONDS,
+                getActivityDetectionPendingIntent());
+
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                /*Toast.makeText(getApplicationContext(), "activity update request enabled",
+                        Toast.LENGTH_SHORT)
+                        .show();*/
             }
-        }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                //Log.w(TAG, "activity update request failed");
+                Toast.makeText(getApplicationContext(),
+                        "activity update request failed",
+                        Toast.LENGTH_SHORT)
+                        .show();
+            }
+        });
+    }
+
+    /**
+     * Removes activity recognition updates using
+     * {@link ActivityRecognitionClient#removeActivityUpdates(PendingIntent)}. Registers success and
+     * failure callbacks.
+     */
+    public void removeActivityUpdates() {
+        Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
+                getActivityDetectionPendingIntent());
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                Toast.makeText(getApplicationContext(),
+                        "activity update remove success",
+                        Toast.LENGTH_SHORT)
+                        .show();
+            }
+        });
+
+        task.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.w(TAG, "Failed to enable activity recognition.");
+                Toast.makeText(getApplicationContext(), "activity update remove failed",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /**
+     * Gets a PendingIntent to be sent for each activity detection.
+     */
+    private PendingIntent getActivityDetectionPendingIntent() {
+        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
+
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // requestActivityUpdates() and removeActivityUpdates().
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 }

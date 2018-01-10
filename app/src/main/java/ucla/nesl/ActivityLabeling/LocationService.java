@@ -6,8 +6,10 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.location.Location;
 import android.os.Binder;
@@ -21,6 +23,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
@@ -39,14 +42,11 @@ public class LocationService extends Service {
             "ucla.nesl.ActivityLabeling.locationforegroundservice";
     private static final String CHANNEL_ID = "channel_0";
 
-    static final String ACTION_BROADCAST = PACKAGE_NAME + ".broadcast";
 
-    static final String EXTRA_LOCATION = PACKAGE_NAME + ".location";
-    private static final String EXTRA_STARTED_FROM_NOTIFICATION = PACKAGE_NAME +
-            ".started_from_notification";
+    private static final String EXTRA_REMOVE_SERVICE_FROM_NOTIFICATION = PACKAGE_NAME +
+            ".remove_service_from_notification";
 
-
-    private static final float MINIMUM_DISPLACEMENT_IN_METERS = 0;
+    private static final float MINIMUM_DISPLACEMENT_IN_METERS = 50;
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
@@ -103,6 +103,10 @@ public class LocationService extends Service {
 
     private final IBinder mBinder = new LocalBinder();
 
+    private DetectedActivity mLastDetectedActivity = null;
+
+    private DetectedActivityReceiver mReceiver;
+
 
     public LocationService() {
     }
@@ -134,6 +138,8 @@ public class LocationService extends Service {
             // Set the Notification Channel for the Notification Manager.
             mNotificationManager.createNotificationChannel(mChannel);
         }
+
+        mReceiver = new DetectedActivityReceiver();
     }
 
 
@@ -141,17 +147,19 @@ public class LocationService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId)
     {
         Log.i(TAG, "onStartCommand");
-        boolean startedFromNotification = intent.getBooleanExtra(EXTRA_STARTED_FROM_NOTIFICATION,
+        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver,
+                new IntentFilter(DetectedActivitiesIntentService.ACTION_BROADCAST));
+        boolean removeServiceFromNotification = intent.getBooleanExtra(EXTRA_REMOVE_SERVICE_FROM_NOTIFICATION,
                 false);
         mNotificationManager.cancel(NOTIFICATION_LOCATION_CHANGED_ID);
 
         // We got here because the user decided to remove location updates from the notification.
-        if (startedFromNotification) {
+        if (removeServiceFromNotification) {
             Log.i(TAG, "started from notification");
             removeLocationUpdates();
             stopSelf();
         }
-        // Tells the system to not try to recreate the service after it has been killed.
+        // Tells the system to not try to recreate the service after it has been killed
         return START_NOT_STICKY;
     }
 
@@ -245,7 +253,7 @@ public class LocationService extends Service {
         CharSequence text = "Monitoring location and user activity";//Utils.getLocationText(mLocation);
 
         // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
-        intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true);
+        intent.putExtra(EXTRA_REMOVE_SERVICE_FROM_NOTIFICATION, true);
 
         // The PendingIntent that leads to a call to onStartCommand() in this service.
         PendingIntent servicePendingIntent = PendingIntent.getService(this, 0, intent,
@@ -276,7 +284,7 @@ public class LocationService extends Service {
         return builder.build();
     }
 
-    private Notification getLocationChangeNotification() {
+    private Notification getReminderNotification(String title) {
         CharSequence text = "You might want to update your activity information";//Utils.getLocationText(mLocation);
         // The PendingIntent to launch activity.
         PendingIntent activityPendingIntent = PendingIntent.getActivity(this, 0,
@@ -285,7 +293,7 @@ public class LocationService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setAutoCancel(true)
                 .setContentText(text)
-                .setContentTitle("Location Changed")
+                .setContentTitle(title)
                 .setOngoing(true)
                 .setPriority(Notification.PRIORITY_DEFAULT)
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -302,23 +310,6 @@ public class LocationService extends Service {
     }
 
 
-    /*private void onNewLocation(Location location) {
-        Log.i(TAG, "New location: " + location);
-
-        mLocation = location;
-
-        // Notify anyone listening for broadcasts about the new location.
-        Intent intent = new Intent(ACTION_BROADCAST);
-        intent.putExtra(EXTRA_LOCATION, location);
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-
-        // Update notification content if running as a foreground service.
-        if (serviceIsRunningInForeground(this)) {
-            mNotificationManager.notify(NOTIFICATION_FOREGROUND_SERVICE_ID, getNotification());
-        }
-    }*/
-
-
     /**
      * Creates a callback for receiving location events.
      */
@@ -333,11 +324,11 @@ public class LocationService extends Service {
                 mLocation = locationResult.getLastLocation();
 
                 if (serviceIsRunningInForeground(getApplicationContext())) {
-                    mNotificationManager.notify(NOTIFICATION_LOCATION_CHANGED_ID, getLocationChangeNotification());
+                    mNotificationManager.notify(NOTIFICATION_LOCATION_CHANGED_ID, getReminderNotification("Location Changed"));
                 }
                 //onNewLocation(locationResult.getLastLocation());
 
-                Toast.makeText(getApplicationContext(), mLocation.toString(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), mLocation.toString(), Toast.LENGTH_LONG).show();
                 Log.i(TAG, "Received Location Update");
             }
 
@@ -372,6 +363,7 @@ public class LocationService extends Service {
     @Override
     public void onDestroy()
     {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
         mNotificationManager.cancel(NOTIFICATION_LOCATION_CHANGED_ID);
         mServiceHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
@@ -408,8 +400,32 @@ public class LocationService extends Service {
         return false;
     }
 
+    private class DetectedActivityReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            DetectedActivity detectedActivity = intent.getParcelableExtra(DetectedActivitiesIntentService.EXTRA_DETECTED_ACTIVITY);
+
+            if (detectedActivity != null && mLastDetectedActivity != null) {
+                if (detectedActivity.getType() != mLastDetectedActivity.getType()) {
+                    Log.i(TAG, "Different detected activities should send out notification.");
+
+                    if (serviceIsRunningInForeground(getApplicationContext())) {
+                        mNotificationManager.notify(NOTIFICATION_LOCATION_CHANGED_ID, getReminderNotification("Google Detected Activity Changed"));
+                    }
+                } else {
+                    Log.i(TAG, "Same detected activities.");
+                }
+            }
+            mLastDetectedActivity = detectedActivity;
+
+        }
+    }
+
 
     public Location getCurrentLocation() {
         return mLocation;
     }
+
+
+
 }
