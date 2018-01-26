@@ -1,4 +1,4 @@
-package ucla.nesl.zxxia.ActivityLabeling;
+package ucla.nesl.ActivityLabeling;
 
 import org.junit.Test;
 

@@ -159,7 +159,7 @@ public class ActivityEditor extends AppCompatActivity {
         if (mCurLoc == null) {
             content = Utils.locToString(-1, -1);
         } else {
-            content = Utils.locToString(mCurLoc.getLatitude(), mCurLoc.getLatitude());
+            content = Utils.locToString(mCurLoc.getLatitude(), mCurLoc.getLongitude());
         }
         TextView startLocTV = findViewById(R.id.LocValTV);
         startLocTV.setText(content);

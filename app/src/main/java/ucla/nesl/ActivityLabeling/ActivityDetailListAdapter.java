@@ -20,17 +20,18 @@ import java.util.List;
  */
 
 public class ActivityDetailListAdapter extends BaseAdapter {
-    private Context mContext;
+    private MainActivity mMainActivity;
     private List<ActivityDetail> mList;
     private LayoutInflater mInflater;
     private ActivityStorageManager mStore;
 
     private LocationService mService;
 
-    ActivityDetailListAdapter(Context context, List<ActivityDetail> actsList, ActivityStorageManager actStoreMngr, LocationService service) {
-        mContext = context;
+    ActivityDetailListAdapter(MainActivity activity, List<ActivityDetail> actsList, ActivityStorageManager actStoreMngr, LocationService service) {
+        mMainActivity = activity;
         mList = actsList;
-        mInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        mInflater = (LayoutInflater)mMainActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mStore = actStoreMngr;
         mService = service;
     }
@@ -60,7 +61,7 @@ public class ActivityDetailListAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // Get view for row item
-        @SuppressLint("ViewHolder") View rowView = mInflater.inflate(R.layout.list_item_activitydetaillist, parent, false);
+        final View rowView = mInflater.inflate(R.layout.list_item_activitydetaillist, parent, false);
 
 
 
@@ -85,7 +86,7 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         content = Utils.locToString(actInfo.getStartLatitude(), actInfo.getStartLongitude());
         startLocTV.setText(content);
 
-        content = Utils.locToString(actInfo.getEndLatitude(), actInfo.getEndLatitude());
+        content = Utils.locToString(actInfo.getEndLatitude(), actInfo.getEndLongitude());
         endLocTV.setText(content);
 
         content = actInfo.getMicrolocation();
@@ -126,7 +127,7 @@ public class ActivityDetailListAdapter extends BaseAdapter {
                     endTV.setText(content);
 
                     actInfo.setEndLocation(mService.getCurrentLocation());
-                    content = Utils.locToString(actInfo.getStartLatitude(),actInfo.getEndLongitude());
+                    content = Utils.locToString(actInfo.getEndLatitude(),actInfo.getEndLongitude());
                     endLocTV.setText(content);
 
                     chronometer.stop();
@@ -136,6 +137,7 @@ public class ActivityDetailListAdapter extends BaseAdapter {
                     mStore.saveOneActivity(actInfo);
                     stopBtn.setEnabled(false);
                     stopBtn.setVisibility(View.GONE);
+                    mMainActivity.incrementNumOfStoredActivities();
                 }
             }
         });

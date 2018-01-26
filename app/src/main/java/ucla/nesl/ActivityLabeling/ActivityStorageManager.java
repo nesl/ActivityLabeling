@@ -26,10 +26,15 @@ public class ActivityStorageManager {
     private static final String usrOngoingActLog = "ongoingActivities.csv";
     private static final String usrUlocLog = "uloc.txt";
     private static final String usrActTypeLog = "type.txt";
+    private int numStoredOfActivities = 0;
 
 
     ActivityStorageManager(Context context) {
         m_context = context;
+    }
+
+    int getNumberOfStoredActivities() {
+        return numStoredOfActivities;
     }
 
     void saveOneActivity(ActivityDetail actInfo) {
@@ -85,21 +90,28 @@ public class ActivityStorageManager {
         ArrayList<ActivityDetail> resultList  = new ArrayList<>();
         if (isExternalStorageWritable()) {
 
-
             File file = new File(getStorageDir(m_context.getString(R.string.app_name)), usrActLog);
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String csvLine;
                 while ((csvLine = br.readLine()) != null) {
-                    String[] row = csvLine.split(",");
-                    Log.i(TAG, csvLine);
+                    numStoredOfActivities++;
+                    String[] row = csvLine.split(",", -1);
+                    Log.i(TAG, Integer.toString(row.length));
                     long startTime = Long.valueOf(row[0]);
                     long endTime = Long.valueOf(row[1]);
+                    double start_lat = Double.valueOf(row[4]);
+                    double start_lon = Double.valueOf(row[5]);
+                    double end_lat = Double.valueOf(row[6]);
+                    double end_lon = Double.valueOf(row[7]);
+                    String uloc = row[8];
+                    String type = row[9];
+                    String dscrpt = row[10];
                     if (endTime >= Calendar.getInstance().getTime().getTime() - 24 * 3600 * 1000) {
                         ActivityDetail actInfo  = new ActivityDetail(startTime, endTime,
-                                Double.valueOf(row[2]), Double.valueOf(row[3]),
-                                Double.valueOf(row[4]), Double.valueOf(row[5]),
-                                row[6], row[7], row[8]);
+                                start_lat, start_lon,
+                                end_lat, end_lon,
+                                uloc, type, dscrpt);
                         resultList.add(actInfo);
                     }
                 }
@@ -114,15 +126,15 @@ public class ActivityStorageManager {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String csvLine;
                 while ((csvLine = br.readLine()) != null) {
-                    String[] row = csvLine.split(",");
+                    String[] row = csvLine.split(",", -1);
                     Log.i(TAG, csvLine);
                     long startTime = Long.valueOf(row[0]);
                     long endTime = Long.valueOf(row[1]);
 
                     ActivityDetail actInfo  = new ActivityDetail(startTime, endTime,
-                            Double.valueOf(row[2]), Double.valueOf(row[3]),
                             Double.valueOf(row[4]), Double.valueOf(row[5]),
-                            row[6], row[7], row[8]);
+                            Double.valueOf(row[6]), Double.valueOf(row[7]),
+                            row[8], row[9], row[10]);
                     resultList.add(actInfo);
                 }
                 br.close();

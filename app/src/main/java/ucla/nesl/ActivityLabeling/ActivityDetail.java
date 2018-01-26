@@ -39,92 +39,93 @@ public class ActivityDetail implements Parcelable {
 
     }
 
-    public boolean isStopped() {
+    boolean isStopped() {
         return m_end != -1;
     }
 
-    public long getStartTime() {
+    long getStartTime() {
         return m_start;
     }
 
-    public long getEndTime() {
+    long getEndTime() {
         return m_end;
     }
 
-    public double getStartLatitude() {
+    double getStartLatitude() {
         return m_start_latitude;
     }
 
-    public double getStartLongitude() {
+    double getStartLongitude() {
         return m_start_longitude;
     }
 
-    public double getEndLatitude() {
+    double getEndLatitude() {
         return m_end_latitude;
     }
 
-    public double getEndLongitude() {
+    double getEndLongitude() {
         return m_end_longitude;
     }
 
-    public String getMicrolocation() {
+    String getMicrolocation() {
         return m_uloc;
     }
 
-    public String getActType() {
+    String getActType() {
         return m_type;
     }
 
-    public String getDescription() {
+    String getDescription() {
         return m_dscrp;
     }
 
-    public void setStartTime(long t) {
+    void setStartTime(long t) {
         m_start = t;
     }
 
-    public void setEndTime(long t) {
+    void setEndTime(long t) {
         m_end = t;
     }
 
-    public void setStartLocation(Location loc) {
+    void setStartLocation(Location loc) {
         if (loc != null) {
             m_start_latitude = loc.getLatitude();
             m_start_longitude = loc.getLongitude();
         }
     }
 
-    public void setEndLocation(Location loc) {
+    void setEndLocation(Location loc) {
         if (loc != null) {
             m_end_latitude = loc.getLatitude();
             m_end_longitude = loc.getLongitude();
         }
     }
 
-    public void setMicrolocation(String uloc) {
+    void setMicrolocation(String uloc) {
         if (uloc != null) {
             m_uloc= uloc;
         }
     }
 
-    public void setActType(String type) {
+    void setActType(String type) {
         if (type != null) {
             m_type = type;
         }
     }
 
-    public void setDescription(String description){
+    void setDescription(String description){
         if (description != null) {
             m_dscrp = description;
         }
     }
 
-    public String toCSVLine() {
+    String toCSVLine() {
         return  Long.toString(m_start) + ',' + Long.toString(m_end) + ',' +
+                Utils.timeToString(m_start) + ','+ Utils.timeToString(m_end) + ',' +
                 Double.toString(m_start_latitude) + ',' + Double.toString(m_start_longitude) + ',' +
                 Double.toString(m_end_latitude) + ',' + Double.toString(m_end_longitude) + ',' +
                 m_uloc + ',' + m_type + ',' +
-                m_dscrp + '\n';
+                m_dscrp + ','+'\n';
     }
 
     public int describeContents() {

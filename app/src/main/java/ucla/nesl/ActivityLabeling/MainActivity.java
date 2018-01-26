@@ -7,10 +7,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -20,7 +22,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
@@ -30,13 +34,12 @@ import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     static final String CURRENT_LOCATION = "Current Location";
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private static final long DETECTION_INTERVAL_IN_MILLISECONDS = 10000;
 
     /**
      *  Constants for Activity Result Code
@@ -46,8 +49,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Constants for Permission Request Code
      */
-    private static final int PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION = 1;
-    private static final int PERMISSIONS_REQUEST_CODE_EXTERNAL_STORAGE = 3;
+    private static final int PERMISSIONS_REQUEST_CODE = 1;
 
     /**
      * Keys for storing activity state in the Bundle.
@@ -71,6 +73,9 @@ public class MainActivity extends AppCompatActivity {
     // UI Widgets.
     private ListView mActivitiesListView;
     private FloatingActionButton mAddActivityFab;
+    private TextView mStorageStatTextView;
+    private Button mStartLocationUpdateButton;
+    private Button mStopLocationUpdateButton;
 
 
     // The BroadcastReceiver used to listen from broadcasts from the service.
@@ -91,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "onServiceConnected");
             LocationService.LocalBinder binder = (LocationService.LocalBinder) service;
             mService = binder.getService();
-            mService.requestLocationUpdates();
             mActivityListAdapter.updateService(mService);
             mBound = true;
         }
@@ -108,10 +112,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityStorageManager mStoreManager;
 
-    /**
-     * The entry point for interacting with activity recognition.
-     */
-    private ActivityRecognitionClient mActivityRecognitionClient;
+
+    private static int numOfSavedActivities = 0;
 
 
     @Override
@@ -125,6 +127,9 @@ public class MainActivity extends AppCompatActivity {
         // Locate the UI widgets.
         mActivitiesListView = findViewById(R.id.ActivitiesListView);
         mAddActivityFab = findViewById(R.id.fab);
+        mStorageStatTextView = findViewById(R.id.StorageStatsTextView);
+        mStartLocationUpdateButton = findViewById(R.id.StartLocationUpdateBtn);
+        mStopLocationUpdateButton = findViewById(R.id.StopLocationUpdateBtn);
 
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
@@ -135,8 +140,10 @@ public class MainActivity extends AppCompatActivity {
             actsList = new ArrayList<>();
             //display saved records within 24 hours
             actsList = mStoreManager.getActivityLogs();
+            numOfSavedActivities = mStoreManager.getNumberOfStoredActivities();
         }
-        mActivityListAdapter = new ActivityDetailListAdapter(this, actsList, mStoreManager, mService);
+
+        mActivityListAdapter = new ActivityDetailListAdapter( MainActivity.this, actsList, mStoreManager, mService);
         mActivitiesListView.setAdapter(mActivityListAdapter);
         mAddActivityFab.setImageResource(R.drawable.plus_sign);
         mAddActivityFab.setOnClickListener(new View.OnClickListener() {
@@ -150,35 +157,50 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mActivityRecognitionClient = new ActivityRecognitionClient(this);
-        sendActivityUpdatesRequest();
+        mStorageStatTextView.setText("Number of activities recorded: " + String.valueOf(numOfSavedActivities));
+
+        if (!checkPermissions()) {
+            requestPermissions();
+        }
+
+        mStartLocationUpdateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (checkPermissions()) {
+                    mService.requestLocationUpdates();
+                    mService.sendActivityUpdatesRequest();
+                } else {
+                    requestPermissions();
+                }
+            }
+        });
+
+        mStopLocationUpdateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mService.removeLocationUpdates();
+                mService.removeActivityUpdates();
+            }
+        });
+        setButtonsState(Utils.requestingLocationUpdates(this));
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+
     }
 
     @Override
     protected void onResume() {
         Log.i(TAG, "onResume");
         super.onResume();
-        if (!checkLocationPermission()) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
-        } else {
-            bindService(new Intent(this, LocationService.class), mServiceConnection,
-                    Context.BIND_AUTO_CREATE);
-        }
-
-
-        if (!checkStoragePermission()) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.READ_EXTERNAL_STORAGE},
-                    PERMISSIONS_REQUEST_CODE_EXTERNAL_STORAGE);
-        }
-
         // Bind to the service. If the service is in foreground mode, this signals to the service
         // that since this activity is in the foreground, the service can exit foreground mode.
-        //LocalBroadcastManager.getInstance(this).registerReceiver(myReceiver,
-          //      new IntentFilter(LocationService.ACTION_BROADCAST));
+        bindService(new Intent(this, LocationService.class), mServiceConnection,
+                Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -191,6 +213,8 @@ public class MainActivity extends AppCompatActivity {
             unbindService(mServiceConnection);
             mBound = false;
         }
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
         super.onStop();
     }
 
@@ -222,20 +246,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private boolean checkLocationPermission() {
+    private boolean checkPermissions() {
         int fineLocationPermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         int coarseLocationPermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-        return fineLocationPermissionState == PackageManager.PERMISSION_GRANTED &&
-                coarseLocationPermissionState == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private boolean checkStoragePermission() {
         int writePermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int readPermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-
-        return writePermissionState == PackageManager.PERMISSION_GRANTED &&
+        return fineLocationPermissionState == PackageManager.PERMISSION_GRANTED &&
+                coarseLocationPermissionState == PackageManager.PERMISSION_GRANTED &&
+                writePermissionState == PackageManager.PERMISSION_GRANTED &&
                 readPermissionState == PackageManager.PERMISSION_GRANTED;
     }
+
+    private void requestPermissions() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                }, PERMISSIONS_REQUEST_CODE
+        );
+    }
+
 
     /**
      * Callback received when a permissions request has been completed.
@@ -245,38 +277,22 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         switch(requestCode){
-            case PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION:
+            case PERMISSIONS_REQUEST_CODE:
                 if(grantResults.length <= 0) {
                     // If user interaction was interrupted, the permission request is cancelled and
                     // receive empty arrays.
                     Log.i(TAG, "User interaction was cancelled.");
                 } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.i(TAG, "Location Access Permission granted.");
+                    Log.i(TAG, "Permission granted.");
                     //startLocationUpdates();
                     bindService(new Intent(this, LocationService.class), mServiceConnection,
                             Context.BIND_AUTO_CREATE);
                     //mService.requestLocationUpdates();
                 } else {
-                    // TODO: Handle permission denied case. Currently, get stuck at this block.
+                    // TODO: Handle permission denied case.
                     // Permission denied.
-                    Log.i(TAG, "Location Access Permission denied.");
-                    Toast.makeText(this, "Location Access Permission denied.", Toast.LENGTH_LONG).show();
-                }
-                break;
-            case PERMISSIONS_REQUEST_CODE_EXTERNAL_STORAGE:
-
-                if(grantResults.length <= 0) {
-                    // If user interaction was interrupted, the permission request is cancelled and
-                    // receive empty arrays.
-                    Log.i(TAG, "User interaction was cancelled.");
-                } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.i(TAG, "External Storage Access Permission granted.");
-                } else {
-                    // TODO: Handle permission denied case. Currently, get stuck at this block.
-                    // Finish the activity? or other logic
-                    // Permission denied.
-                    Log.i(TAG, "External Storage Access Permission denied.");
-                    Toast.makeText(this, "External Storage Access Permission denied.", Toast.LENGTH_LONG).show();
+                    Log.i(TAG, "Permission denied.");
+                    Toast.makeText(this, "Permission denied.", Toast.LENGTH_LONG).show();
                 }
                 break;
             default:
@@ -330,6 +346,8 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+            startActivity(intent);
             return true;
         }
 
@@ -338,74 +356,28 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    /**
-     * Registers for activity recognition updates using
-     * {@link ActivityRecognitionClient#requestActivityUpdates(long, PendingIntent)}.
-     * Registers success and failure callbacks.
-     */
-    private void sendActivityUpdatesRequest() {
-
-        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
-                DETECTION_INTERVAL_IN_MILLISECONDS,
-                getActivityDetectionPendingIntent());
-
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                /*Toast.makeText(getApplicationContext(), "activity update request enabled",
-                        Toast.LENGTH_SHORT)
-                        .show();*/
-            }
-        });
-
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                //Log.w(TAG, "activity update request failed");
-                Toast.makeText(getApplicationContext(),
-                        "activity update request failed",
-                        Toast.LENGTH_SHORT)
-                        .show();
-            }
-        });
+    private void setButtonsState(boolean requestingLocationUpdates) {
+        if (requestingLocationUpdates) {
+            mStartLocationUpdateButton.setEnabled(false);
+            mStopLocationUpdateButton.setEnabled(true);
+        } else {
+            mStartLocationUpdateButton.setEnabled(true);
+            mStopLocationUpdateButton.setEnabled(false);
+        }
     }
 
-    /**
-     * Removes activity recognition updates using
-     * {@link ActivityRecognitionClient#removeActivityUpdates(PendingIntent)}. Registers success and
-     * failure callbacks.
-     */
-    public void removeActivityUpdates() {
-        Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
-                getActivityDetectionPendingIntent());
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                Toast.makeText(getApplicationContext(),
-                        "activity update remove success",
-                        Toast.LENGTH_SHORT)
-                        .show();
-            }
-        });
-
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.w(TAG, "Failed to enable activity recognition.");
-                Toast.makeText(getApplicationContext(), "activity update remove failed",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+    public void incrementNumOfStoredActivities() {
+        numOfSavedActivities++;
+        mStorageStatTextView.setText(String.valueOf("Number of activities recorded: " + numOfSavedActivities));
     }
 
-    /**
-     * Gets a PendingIntent to be sent for each activity detection.
-     */
-    private PendingIntent getActivityDetectionPendingIntent() {
-        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
-
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
-        // requestActivityUpdates() and removeActivityUpdates().
-        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        // Update the buttons state depending on whether location updates are being requested.
+        Log.i(TAG, "Location Update request changed");
+        if (key.equals(Utils.KEY_REQUESTING_LOCATION_UPDATES)) {
+            setButtonsState(sharedPreferences.getBoolean(Utils.KEY_REQUESTING_LOCATION_UPDATES,
+                    false));
+        }
     }
 }
