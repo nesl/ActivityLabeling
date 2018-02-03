@@ -1,7 +1,7 @@
 package ucla.nesl.ActivityLabeling;
 
 import android.content.Context;
-import android.content.res.Resources;
+import android.location.Location;
 import android.preference.PreferenceManager;
 import android.text.format.DateFormat;
 
@@ -15,79 +15,85 @@ import java.util.Locale;
  */
 
 public class Utils {
-    static String timeToString(long t) {
-        if (t == -1) {
+
+    static final long INVALID_TIME = -1L;
+    static final double INVALID_LOCATION_VAL = -1000.0;
+
+    static String timeToString(long timeMs) {
+        if (timeMs == INVALID_TIME) {
             return "Not Available";
         }
-        return DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(t)).toString();
+        return DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(timeMs)).toString();
+    }
+
+
+    static String locToString(Location location) {
+        if (location == null) {
+            return locToString(INVALID_LOCATION_VAL, INVALID_LOCATION_VAL);
+        } else {
+            return locToString(location.getLatitude(), location.getLongitude());
+        }
     }
 
     static String locToString(double latitude, double longitude) {
-        if (latitude == -1 || longitude == -1) {
+        if (latitude == INVALID_LOCATION_VAL || longitude == INVALID_LOCATION_VAL) {
             return "Unknown Location";
         } else {
-            return "(" + String.valueOf(latitude) + ", " + String.valueOf(longitude) +")";
+            return String.format(Locale.getDefault(), "(%.6f, %.6f)", latitude, longitude);
         }
     }
-
 
     /**
      * Returns a human readable String corresponding to a detected activity type.
      */
-    static String getActivityString(Context context, int detectedActivityType) {
-        Resources resources = context.getResources();
+    static String getActivityString(int detectedActivityType) {
         switch(detectedActivityType) {
             case DetectedActivity.IN_VEHICLE:
-                return resources.getString(R.string.in_vehicle);
+                return "In a vehicle";
             case DetectedActivity.ON_BICYCLE:
-                return resources.getString(R.string.on_bicycle);
+                return "On a bicycle";
             case DetectedActivity.ON_FOOT:
-                return resources.getString(R.string.on_foot);
+                return "On foot";
             case DetectedActivity.RUNNING:
-                return resources.getString(R.string.running);
+                return "Running";
             case DetectedActivity.STILL:
-                return resources.getString(R.string.still);
+                return "Still";
             case DetectedActivity.TILTING:
-                return resources.getString(R.string.tilting);
+                return "Tilting";
             case DetectedActivity.UNKNOWN:
-                return resources.getString(R.string.unknown);
+                return "Unknown activity";
             case DetectedActivity.WALKING:
-                return resources.getString(R.string.walking);
+                return "Walking";
             default:
-                return resources.getString(R.string.unidentifiable_activity, detectedActivityType);
+                return "Unidentifiable activity: " + detectedActivityType;
         }
     }
 
-    static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
-    static final String KEY_LOCATION_CHANGE_NOTIFICATION = "location_change_notification";
-    static final String KEY_LOCATION_UPDATE_INTERVAL = "location_update_interval";
-    static final String KEY_LOCATION_MINIMUM_DISPLACEMENT = "location_minimum_displacement";
-    static final String KEY_ACTIVITY_DETECTION_INTERVAL = "activity_detection_interval";
-    static final String KEY_ACTIVITY_CHANGE_NOTIFICATION = "activity_change_notification";
+
 
     /**
      * Returns true if requesting location updates, otherwise returns false.
      *
      * @param context The {@link Context}.
      */
-    static boolean requestingLocationUpdates(Context context) {
+    /*static boolean requestingLocationUpdates(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(KEY_REQUESTING_LOCATION_UPDATES, false);
-    }
+    }*/
 
     /**
      * Stores the location updates state in SharedPreferences.
      * @param requestingLocationUpdates The location updates state.
      */
-    static void setRequestingLocationUpdates(Context context, boolean requestingLocationUpdates) {
+    /*static void setRequestingLocationUpdates(Context context, boolean requestingLocationUpdates) {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putBoolean(KEY_REQUESTING_LOCATION_UPDATES, requestingLocationUpdates)
                 .apply();
-    }
+    }*/
 
 
-    static boolean locationChangeNotification(Context context) {
+    static boolean locationChangeNotification(Context context) {location
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(KEY_LOCATION_CHANGE_NOTIFICATION, false);
     }
