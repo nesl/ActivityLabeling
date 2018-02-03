@@ -35,9 +35,8 @@ public class DetectedActivitiesIntentService extends IntentService {
 
         // Log each activity.
         Log.i(TAG, "activities detected");
-        Log.i(TAG, Utils.getActivityString(
-                    getApplicationContext(),
-                    detectedActivity.getType()) + " " + detectedActivity.getConfidence() + "%");
+        Log.i(TAG, Utils.getActivityString(detectedActivity.getType())
+                + " " + detectedActivity.getConfidence() + "%");
 
         // Notify anyone listening for broadcasts about the new location.
         Intent intentToSend = new Intent(ACTION_BROADCAST);

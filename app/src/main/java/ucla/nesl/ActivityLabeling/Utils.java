@@ -69,36 +69,31 @@ public class Utils {
         }
     }
 
-    static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
-    static final String KEY_LOCATION_CHANGE_NOTIFICATION = "location_change_notification";
-    static final String KEY_LOCATION_UPDATE_INTERVAL = "location_update_interval";
-    static final String KEY_LOCATION_MINIMUM_DISPLACEMENT = "location_minimum_displacement";
-    static final String KEY_ACTIVITY_DETECTION_INTERVAL = "activity_detection_interval";
-    static final String KEY_ACTIVITY_CHANGE_NOTIFICATION = "activity_change_notification";
+
 
     /**
      * Returns true if requesting location updates, otherwise returns false.
      *
      * @param context The {@link Context}.
      */
-    static boolean requestingLocationUpdates(Context context) {
+    /*static boolean requestingLocationUpdates(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(KEY_REQUESTING_LOCATION_UPDATES, false);
-    }
+    }*/
 
     /**
      * Stores the location updates state in SharedPreferences.
      * @param requestingLocationUpdates The location updates state.
      */
-    static void setRequestingLocationUpdates(Context context, boolean requestingLocationUpdates) {
+    /*static void setRequestingLocationUpdates(Context context, boolean requestingLocationUpdates) {
         PreferenceManager.getDefaultSharedPreferences(context)
                 .edit()
                 .putBoolean(KEY_REQUESTING_LOCATION_UPDATES, requestingLocationUpdates)
                 .apply();
-    }
+    }*/
 
 
-    static boolean locationChangeNotification(Context context) {
+    static boolean locationChangeNotification(Context context) {location
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(KEY_LOCATION_CHANGE_NOTIFICATION, false);
     }

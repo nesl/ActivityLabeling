@@ -182,7 +182,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 mService.removeActivityUpdates();
             }
         });
-        setButtonsState(Utils.requestingLocationUpdates(this));
+        boolean requestLocationUpdates = PreferenceManager
+                .getDefaultSharedPreferences(this)
+                .getBoolean(PreferenceKey.KEY_REQUESTING_LOCATION_UPDATES, false);
+        setButtonsState(requestLocationUpdates);
     }
 
     @Override
@@ -375,9 +378,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // Update the buttons state depending on whether location updates are being requested.
         Log.i(TAG, "Location Update request changed");
-        if (key.equals(Utils.KEY_REQUESTING_LOCATION_UPDATES)) {
-            setButtonsState(sharedPreferences.getBoolean(Utils.KEY_REQUESTING_LOCATION_UPDATES,
-                    false));
+        if (key.equals(PreferenceKey.KEY_REQUESTING_LOCATION_UPDATES)) {
+            setButtonsState(sharedPreferences.getBoolean(
+                    PreferenceKey.KEY_REQUESTING_LOCATION_UPDATES, false));
         }
     }
 }
