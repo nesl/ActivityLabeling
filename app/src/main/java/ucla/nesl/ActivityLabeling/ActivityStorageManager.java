@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -108,10 +107,17 @@ public class ActivityStorageManager {
                     String type = row[9];
                     String dscrpt = row[10];
                     if (endTime >= Calendar.getInstance().getTime().getTime() - 24 * 3600 * 1000) {
-                        ActivityDetail actInfo  = new ActivityDetail(startTime, endTime,
-                                start_lat, start_lon,
-                                end_lat, end_lon,
-                                uloc, type, dscrpt);
+                        ActivityDetail actInfo = new ActivityDetail();
+                        actInfo.startTimeMs = startTime;
+                        actInfo.endTimeMs = endTime;
+                        actInfo.startLatitude = start_lat;
+                        actInfo.startLongitude = start_lon;
+                        actInfo.endLatitude = end_lat;
+                        actInfo.endLongitude = end_lon;
+                        actInfo.microLocationLabel = uloc;
+                        actInfo.type = type;
+                        actInfo.description = dscrpt;
+
                         resultList.add(actInfo);
                     }
                 }
@@ -126,16 +132,7 @@ public class ActivityStorageManager {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String csvLine;
                 while ((csvLine = br.readLine()) != null) {
-                    String[] row = csvLine.split(",", -1);
-                    Log.i(TAG, csvLine);
-                    long startTime = Long.valueOf(row[0]);
-                    long endTime = Long.valueOf(row[1]);
-
-                    ActivityDetail actInfo  = new ActivityDetail(startTime, endTime,
-                            Double.valueOf(row[4]), Double.valueOf(row[5]),
-                            Double.valueOf(row[6]), Double.valueOf(row[7]),
-                            row[8], row[9], row[10]);
-                    resultList.add(actInfo);
+                    resultList.add(ActivityDetail.parseCSVLine(csvLine));
                 }
                 br.close();
             }
@@ -166,11 +163,11 @@ public class ActivityStorageManager {
         return resultList;
     }
 
-    public ArrayList<String> loadUsrUlocs() {
+    ArrayList<String> loadUsrUlocs() {
         return load(usrUlocLog);
     }
 
-    public ArrayList<String> loadUsrActTpyes() {
+    ArrayList<String> loadUsrActTpyes() {
         return load(usrActTypeLog);
     }
 

@@ -38,8 +38,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
-import java.util.prefs.PreferenceChangeListener;
-
 public class LocationService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     private static final String TAG = LocationService.class.getSimpleName();
@@ -208,7 +206,9 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         // do nothing. Otherwise, we make this service a foreground service.
 
         //TODO: check requesting state
-        if (!mChangingConfiguration && Utils.requestingLocationUpdates(this)) {
+        boolean requestingLocationUpdates = mSharedPreferences.getBoolean(
+                PreferenceKey.KEY_REQUESTING_LOCATION_UPDATES, false);
+        if (!mChangingConfiguration && requestingLocationUpdates) {
             Log.i(TAG, "Starting foreground service");
             /*
             // TODO(developer). If targeting O, use the following code.

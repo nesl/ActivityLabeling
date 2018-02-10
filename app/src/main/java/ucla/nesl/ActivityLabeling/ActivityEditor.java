@@ -1,12 +1,8 @@
 package ucla.nesl.ActivityLabeling;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -17,16 +13,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 
 
 public class ActivityEditor extends AppCompatActivity {
@@ -233,14 +225,15 @@ public class ActivityEditor extends AppCompatActivity {
                 description = findViewById(R.id.DescriptionET);
 
                 ActivityDetail act = new ActivityDetail();
-                act.setStartTime(mStartTime.getTime());
+                act.startTimeMs = mStartTime.getTime();
                 act.setStartLocation(mCurLoc);
-                act.setMicrolocation(mMicroLocation);
-                act.setActType(mType);
-                act.setDescription(description.getText().toString());
+                act.microLocationLabel = mMicroLocation;
+                act.type = mType;
+                act.description = description.getText().toString();
+
                 myIntent.putExtra(ACTIVITY_INFO, act);
                 setResult(RESULT_OK, myIntent);
-                finish();//finishing activity
+                finish();
             }
         });
     }

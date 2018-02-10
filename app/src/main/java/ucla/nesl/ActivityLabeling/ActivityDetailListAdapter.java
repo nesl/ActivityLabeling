@@ -1,6 +1,5 @@
 package ucla.nesl.ActivityLabeling;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.SystemClock;
 import android.view.LayoutInflater;
@@ -63,8 +62,6 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         // Get view for row item
         final View rowView = mInflater.inflate(R.layout.list_item_activitydetaillist, parent, false);
 
-
-
         final TextView startTV = rowView.findViewById(R.id.startTV);
         final TextView endTV = rowView.findViewById(R.id.endTV);
         final TextView startLocTV = rowView.findViewById(R.id.startLocTV);
@@ -76,39 +73,25 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         final ActivityDetail actInfo = (ActivityDetail) getItem(position);
 
 
-        String content = Utils.timeToString(actInfo.getStartTime());
-        startTV.setText(content);
-
-        content = Utils.timeToString(actInfo.getEndTime());
-        endTV.setText(content);
-
-
-        content = Utils.locToString(actInfo.getStartLatitude(), actInfo.getStartLongitude());
-        startLocTV.setText(content);
-
-        content = Utils.locToString(actInfo.getEndLatitude(), actInfo.getEndLongitude());
-        endLocTV.setText(content);
-
-        content = actInfo.getMicrolocation();
-        ulocTV.setText(content);
-
-        content = actInfo.getActType();
-        typeTV.setText(content);
-
-        content = actInfo.getDescription();
-        dscrpTV.setText(content);
+        startTV.setText(Utils.timeToString(actInfo.startTimeMs));
+        endTV.setText(Utils.timeToString(actInfo.endTimeMs));
+        startLocTV.setText(Utils.locToString(actInfo.startLatitude, actInfo.startLongitude));
+        endLocTV.setText(Utils.locToString(actInfo.endLatitude, actInfo.endLongitude));
+        ulocTV.setText(actInfo.microLocationLabel);
+        typeTV.setText(actInfo.type);
+        dscrpTV.setText(actInfo.description);
 
         final Chronometer chronometer = rowView.findViewById(R.id.durationChrom);
 
         if (!actInfo.isStopped()) {
             // end time is not set so keep counting time
             long elapsedRealtimeOffset = System.currentTimeMillis() - SystemClock.elapsedRealtime();
-            chronometer.setBase(actInfo.getStartTime() - elapsedRealtimeOffset);
+            chronometer.setBase(actInfo.startTimeMs - elapsedRealtimeOffset);
             chronometer.start();
         } else {
             // end time is set already, just calculate the duration
-            long elapsedRealtimeOffset = actInfo.getEndTime() - SystemClock.elapsedRealtime();
-            chronometer.setBase(actInfo.getStartTime() - elapsedRealtimeOffset);
+            long elapsedRealtimeOffset = actInfo.endTimeMs - SystemClock.elapsedRealtime();
+            chronometer.setBase(actInfo.startTimeMs - elapsedRealtimeOffset);
         }
 
 
@@ -121,18 +104,15 @@ public class ActivityDetailListAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 if (!actInfo.isStopped()) {
-                    actInfo.setEndTime(Calendar.getInstance().getTime().getTime());
-
-                    String content = Utils.timeToString(actInfo.getEndTime());
-                    endTV.setText(content);
+                    actInfo.endTimeMs = Calendar.getInstance().getTime().getTime();
+                    endTV.setText(Utils.timeToString(actInfo.endTimeMs));
 
                     actInfo.setEndLocation(mService.getCurrentLocation());
-                    content = Utils.locToString(actInfo.getEndLatitude(),actInfo.getEndLongitude());
-                    endLocTV.setText(content);
+                    endLocTV.setText(Utils.locToString(actInfo.endLatitude, actInfo.endLongitude));
 
                     chronometer.stop();
-                    long elapsedRealtimeOffset = actInfo.getEndTime() - SystemClock.elapsedRealtime();
-                    chronometer.setBase(actInfo.getStartTime() - elapsedRealtimeOffset);
+                    long elapsedRealtimeOffset = actInfo.endTimeMs - SystemClock.elapsedRealtime();
+                    chronometer.setBase(actInfo.startTimeMs - elapsedRealtimeOffset);
 
                     mStore.saveOneActivity(actInfo);
                     stopBtn.setEnabled(false);

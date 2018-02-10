@@ -47,7 +47,8 @@ public class SettingActivity extends AppCompatActivity {
                 mSharedPreferences.getBoolean(PreferenceKey.KEY_LOCATION_CHANGE_NOTIFICATION, false));
         actDetectionIntervalET.setText(String.valueOf(
                 mSharedPreferences.getLong(PreferenceKey.KEY_ACTIVITY_DETECTION_INTERVAL, 60000L)));
-        actNotificationSW.setChecked(Utils.activityChangeNotification(this));
+        actNotificationSW.setChecked(
+                mSharedPreferences.getBoolean(PreferenceKey.KEY_ACTIVITY_CHANGE_NOTIFICATION, false));
 
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
