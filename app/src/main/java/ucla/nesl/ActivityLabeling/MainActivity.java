@@ -2,7 +2,6 @@ package ucla.nesl.ActivityLabeling;
 
 
 import android.Manifest;
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -26,11 +25,6 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.android.gms.location.ActivityRecognitionClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 
@@ -184,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         });
         boolean requestLocationUpdates = PreferenceManager
                 .getDefaultSharedPreferences(this)
-                .getBoolean(PreferenceKey.KEY_REQUESTING_LOCATION_UPDATES, false);
+                .getBoolean(SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES, false);
         setButtonsState(requestLocationUpdates);
     }
 
@@ -378,9 +372,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // Update the buttons state depending on whether location updates are being requested.
         Log.i(TAG, "Location Update request changed");
-        if (key.equals(PreferenceKey.KEY_REQUESTING_LOCATION_UPDATES)) {
+        if (key.equals(SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES)) {
             setButtonsState(sharedPreferences.getBoolean(
-                    PreferenceKey.KEY_REQUESTING_LOCATION_UPDATES, false));
+                    SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES, false));
         }
     }
 }

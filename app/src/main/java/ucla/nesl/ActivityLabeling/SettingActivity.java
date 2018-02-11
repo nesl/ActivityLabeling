@@ -1,8 +1,6 @@
 package ucla.nesl.ActivityLabeling;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -21,7 +19,7 @@ public class SettingActivity extends AppCompatActivity {
     private Button saveBtn;
     private Button cancelBtn;
 
-    private SharedPreferences mSharedPreferences;
+    private SharedPreferenceHelper preferenceHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,18 +35,13 @@ public class SettingActivity extends AppCompatActivity {
         saveBtn = findViewById(R.id.SettingsSaveBtn);
         cancelBtn = findViewById(R.id.SettingsCancelBtn);
 
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        preferenceHelper = new SharedPreferenceHelper(this);
 
-        locUpdateIntervalET.setText(String.valueOf(
-                mSharedPreferences.getLong(PreferenceKey.KEY_LOCATION_UPDATE_INTERVAL, 60000L)));
-        locMinDisplacementET.setText(String.valueOf(
-                mSharedPreferences.getFloat(PreferenceKey.KEY_LOCATION_MINIMUM_DISPLACEMENT, 50.f)));
-        locNotificationSW.setChecked(
-                mSharedPreferences.getBoolean(PreferenceKey.KEY_LOCATION_CHANGE_NOTIFICATION, false));
-        actDetectionIntervalET.setText(String.valueOf(
-                mSharedPreferences.getLong(PreferenceKey.KEY_ACTIVITY_DETECTION_INTERVAL, 60000L)));
-        actNotificationSW.setChecked(
-                mSharedPreferences.getBoolean(PreferenceKey.KEY_ACTIVITY_CHANGE_NOTIFICATION, false));
+        locUpdateIntervalET.setText(String.valueOf(preferenceHelper.getLocationUpdateInterval()));
+        locMinDisplacementET.setText(String.valueOf(preferenceHelper.getLocationMinimumDisplacement()));
+        locNotificationSW.setChecked(preferenceHelper.getLocationChangeNotification());
+        actDetectionIntervalET.setText(String.valueOf(preferenceHelper.getActivityDetetionInterval()));
+        actNotificationSW.setChecked(preferenceHelper.getActivityChangeNotification());
 
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,17 +50,15 @@ public class SettingActivity extends AppCompatActivity {
                 long locUpdateInterval = stringToLong(locUpdateIntervalET);
                 long actUpdateInterval = stringToLong(actDetectionIntervalET);
                 float minDisplacement = stringToFloat(locMinDisplacementET);
-                if (locUpdateInterval < 0 || actUpdateInterval < 0 || minDisplacement < 0 ) {
+                if (locUpdateInterval < 0L || actUpdateInterval < 0L || minDisplacement < 0.f) {
                     return;
                 }
 
-                mSharedPreferences.edit()
-                        .putLong(PreferenceKey.KEY_LOCATION_UPDATE_INTERVAL, locUpdateInterval)
-                        .putFloat(PreferenceKey.KEY_LOCATION_MINIMUM_DISPLACEMENT, minDisplacement)
-                        .putBoolean(PreferenceKey.KEY_LOCATION_CHANGE_NOTIFICATION, locNotificationSW.isChecked())
-                        .putLong(PreferenceKey.KEY_ACTIVITY_DETECTION_INTERVAL, actUpdateInterval)
-                        .putBoolean(PreferenceKey.KEY_ACTIVITY_CHANGE_NOTIFICATION, actNotificationSW.isChecked())
-                        .apply();
+                preferenceHelper.setLocationUpdateInterval(locUpdateInterval);
+                preferenceHelper.setLocationMinimumDisplacement(minDisplacement);
+                preferenceHelper.setLocationChangeNotification(locNotificationSW.isChecked());
+                preferenceHelper.setActivityDetectionInterval(actUpdateInterval);
+                preferenceHelper.setActivityChangeNotification(actNotificationSW.isChecked());
 
                 finish();
             }
