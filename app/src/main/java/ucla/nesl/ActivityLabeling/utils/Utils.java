@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.utils;
 
 import android.location.Location;
 import android.text.format.DateFormat;

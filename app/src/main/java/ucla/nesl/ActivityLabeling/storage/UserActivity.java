@@ -8,7 +8,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
-import ucla.nesl.ActivityLabeling.Utils;
+import ucla.nesl.ActivityLabeling.utils.Utils;
 
 /**
  * Created by zxxia on 12/3/17.

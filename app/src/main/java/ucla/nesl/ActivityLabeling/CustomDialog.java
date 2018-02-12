@@ -2,16 +2,11 @@ package ucla.nesl.ActivityLabeling;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatDialog;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -84,13 +79,9 @@ public class CustomDialog extends AppCompatDialogFragment {
             }
         });
         mListView = view.findViewById(R.id.dialogLV);
-         mItemsAdapter = new CustomListAdapter(getContext(), mItems);
+        mItemsAdapter = new CustomListAdapter(getContext(), mItems);
         mListView.setAdapter(mItemsAdapter);
         return builder.create();
     }
-
-
-
-
 
 }

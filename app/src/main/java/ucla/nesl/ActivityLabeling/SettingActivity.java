@@ -8,6 +8,8 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
+
 public class SettingActivity extends AppCompatActivity {
 
     // UI widgets

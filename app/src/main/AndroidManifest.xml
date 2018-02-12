@@ -34,7 +34,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ActivityEditor"
+            android:name=".UserActivityEditorActivity"
             android:label="@string/title_activity_editor"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">

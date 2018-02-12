@@ -15,13 +15,14 @@ import java.util.List;
 
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
+import ucla.nesl.ActivityLabeling.utils.Utils;
 
 /**
  * Created by zxxia on 12/3/17.
  * Class to construct the activity list in main activity.
  */
 
-public class ActivityDetailListAdapter extends BaseAdapter {
+public class UserActivityListAdapter extends BaseAdapter {
     private MainActivity mMainActivity;
     private List<UserActivity> mList;
     private LayoutInflater mInflater;
@@ -29,7 +30,7 @@ public class ActivityDetailListAdapter extends BaseAdapter {
 
     private LocationService mService;
 
-    ActivityDetailListAdapter(MainActivity activity, List<UserActivity> actsList, UserActivityStorageManager actStoreMngr, LocationService service) {
+    UserActivityListAdapter(MainActivity activity, List<UserActivity> actsList, UserActivityStorageManager actStoreMngr, LocationService service) {
         mMainActivity = activity;
         mList = actsList;
 

@@ -38,6 +38,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
+
 public class LocationService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     private static final String TAG = LocationService.class.getSimpleName();

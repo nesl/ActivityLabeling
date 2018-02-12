@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import ucla.nesl.ActivityLabeling.R;
 
+
 /**
  * Created by zxxia on 12/18/17.
  * Manage log storage
@@ -37,7 +38,6 @@ public class UserActivityStorageManager {
     public UserActivityStorageManager(Context context) {
         mContext = context;
     }
-
     public int getNumberOfStoredActivities() {
         return numStoredOfActivities;
     }
@@ -149,21 +149,21 @@ public class UserActivityStorageManager {
         return resultList;
     }
 
-    ArrayList<String> loadUsrUlocs() {
+    public ArrayList<String> loadUsrUlocs() {
         return load(usrUlocLog);
     }
 
-    ArrayList<String> loadUsrActTpyes() {
+    public ArrayList<String> loadUsrActTpyes() {
         return load(usrActTypeLog);
     }
 
-    void saveUsrUloc(ArrayList<String> items) {
+    public void saveUsrUloc(ArrayList<String> items) {
         writeToFile(usrUlocLog, items, false);
     }
 
 
 
-    void saveUserActType( ArrayList<String> items) {
+    public void saveUserActType( ArrayList<String> items) {
         writeToFile(usrActTypeLog, items, false);
     }
 

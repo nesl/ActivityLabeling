@@ -30,6 +30,7 @@ import java.util.ArrayList;
 
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
+import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private ArrayList<UserActivity> actsList  = null;
 
-    private ActivityDetailListAdapter mActivityListAdapter;
+    private UserActivityListAdapter mActivityListAdapter;
 
     // UI Widgets.
     private ListView mActivitiesListView;
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             numOfSavedActivities = mStoreManager.getNumberOfStoredActivities();
         }
 
-        mActivityListAdapter = new ActivityDetailListAdapter(this, actsList, mStoreManager, mService);
+        mActivityListAdapter = new UserActivityListAdapter(this, actsList, mStoreManager, mService);
         mActivitiesListView.setAdapter(mActivityListAdapter);
         mAddActivityFab.setImageResource(R.drawable.plus_sign);
         mAddActivityFab.setOnClickListener(new View.OnClickListener() {
@@ -128,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             public void onClick(View view) {
                 Log.i(TAG, "Create a new activity log");
                 mCurrentLocation = mService.getCurrentLocation();
-                Intent intent = new Intent(getApplicationContext(), ActivityEditor.class);
+                Intent intent = new Intent(getApplicationContext(), UserActivityEditorActivity.class);
                 intent.putExtra(CURRENT_LOCATION, mCurrentLocation);
                 startActivityForResult(intent, ACTIVITY_EDITOR_RESULT_REQUEST_CODE);
             }
@@ -287,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             case ACTIVITY_EDITOR_RESULT_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
                     Log.i(TAG, "Received results from EditorActivity");
-                    actsList.add((UserActivity) data.getParcelableExtra(ActivityEditor.ACTIVITY_INFO));
+                    actsList.add((UserActivity) data.getParcelableExtra(UserActivityEditorActivity.ACTIVITY_INFO));
                     mActivityListAdapter.notifyDataSetChanged();
                 }
                 break;

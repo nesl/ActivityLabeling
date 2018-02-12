@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,55 +19,55 @@ public class SharedPreferenceHelper {
 
     private SharedPreferences mSharedPreferences;
 
-    SharedPreferenceHelper(Context context) {
+    public SharedPreferenceHelper(Context context) {
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    boolean getRequestingLocationUpdates() {
+    public boolean getRequestingLocationUpdates() {
         return mSharedPreferences.getBoolean(KEY_REQUESTING_LOCATION_UPDATES, false);
     }
 
-    void setRequestingLocationUpdates(boolean value) {
+    public void setRequestingLocationUpdates(boolean value) {
         mSharedPreferences.edit().putBoolean(KEY_REQUESTING_LOCATION_UPDATES, value).apply();
     }
 
-    boolean getLocationChangeNotification() {
+    public boolean getLocationChangeNotification() {
         return mSharedPreferences.getBoolean(KEY_LOCATION_CHANGE_NOTIFICATION, false);
     }
 
-    void setLocationChangeNotification(boolean value) {
+    public void setLocationChangeNotification(boolean value) {
         mSharedPreferences.edit().putBoolean(KEY_LOCATION_CHANGE_NOTIFICATION, value).apply();
     }
 
-    long getLocationUpdateInterval() {
+    public long getLocationUpdateInterval() {
         return mSharedPreferences.getLong(KEY_LOCATION_UPDATE_INTERVAL, 60000L);
     }
 
-    void setLocationUpdateInterval(long value) {
+    public void setLocationUpdateInterval(long value) {
         mSharedPreferences.edit().putLong(KEY_LOCATION_UPDATE_INTERVAL, value).apply();
     }
 
-    float getLocationMinimumDisplacement() {
+    public float getLocationMinimumDisplacement() {
         return mSharedPreferences.getFloat(KEY_LOCATION_MINIMUM_DISPLACEMENT, 50.f);
     }
 
-    void setLocationMinimumDisplacement(float value) {
+    public void setLocationMinimumDisplacement(float value) {
         mSharedPreferences.edit().putFloat(KEY_LOCATION_MINIMUM_DISPLACEMENT, value).apply();
     }
 
-    long getActivityDetetionInterval() {
+    public long getActivityDetetionInterval() {
         return mSharedPreferences.getLong(KEY_ACTIVITY_DETECTION_INTERVAL, 60000L);
     }
 
-    void setActivityDetectionInterval(long value) {
+    public void setActivityDetectionInterval(long value) {
         mSharedPreferences.edit().putLong(KEY_ACTIVITY_DETECTION_INTERVAL, value).apply();
     }
 
-    boolean getActivityChangeNotification() {
+    public boolean getActivityChangeNotification() {
         return mSharedPreferences.getBoolean(KEY_ACTIVITY_CHANGE_NOTIFICATION, false);
     }
 
-    void setActivityChangeNotification(boolean value) {
+    public void setActivityChangeNotification(boolean value) {
         mSharedPreferences.edit().putBoolean(KEY_ACTIVITY_CHANGE_NOTIFICATION, value).apply();
     }
 }

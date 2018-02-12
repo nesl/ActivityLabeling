@@ -9,6 +9,8 @@ import android.util.Log;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
+import ucla.nesl.ActivityLabeling.utils.Utils;
+
 public class DetectedActivitiesIntentService extends IntentService {
 
     static final String ACTION_BROADCAST = ".broadcast";

@@ -22,11 +22,12 @@ import java.util.List;
 
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
+import ucla.nesl.ActivityLabeling.utils.Utils;
 
 
-public class ActivityEditor extends AppCompatActivity {
+public class UserActivityEditorActivity extends AppCompatActivity {
 
-    private static final String TAG = ActivityEditor.class.getSimpleName();
+    private static final String TAG = UserActivityEditorActivity.class.getSimpleName();
     static final String ACTIVITY_INFO = "Activity Info";
 
     /**
