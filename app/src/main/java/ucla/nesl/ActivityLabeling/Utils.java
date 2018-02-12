@@ -14,10 +14,10 @@ import java.util.Locale;
 
 public class Utils {
 
-    static final long INVALID_TIME = -1L;
-    static final double INVALID_LOCATION_VAL = -1000.0;
+    public static final long INVALID_TIME = -1L;
+    public static final double INVALID_LOCATION_VAL = -1000.0;
 
-    static String timeToString(long timeMs) {
+    public static String timeToString(long timeMs) {
         if (timeMs == INVALID_TIME) {
             return "Not Available";
         }
@@ -25,7 +25,7 @@ public class Utils {
     }
 
 
-    static String locToString(Location location) {
+    public static String locToString(Location location) {
         if (location == null) {
             return locToString(INVALID_LOCATION_VAL, INVALID_LOCATION_VAL);
         } else {
@@ -33,7 +33,7 @@ public class Utils {
         }
     }
 
-    static String locToString(double latitude, double longitude) {
+    public static String locToString(double latitude, double longitude) {
         if (latitude == INVALID_LOCATION_VAL || longitude == INVALID_LOCATION_VAL) {
             return "Unknown Location";
         } else {
@@ -44,7 +44,7 @@ public class Utils {
     /**
      * Returns a human readable String corresponding to a detected activity type.
      */
-    static String getActivityString(int detectedActivityType) {
+    public static String getActivityString(int detectedActivityType) {
         switch(detectedActivityType) {
             case DetectedActivity.IN_VEHICLE:
                 return "In a vehicle";

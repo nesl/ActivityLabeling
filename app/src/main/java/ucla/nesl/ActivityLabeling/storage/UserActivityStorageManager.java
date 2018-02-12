@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.storage;
 
 import android.content.Context;
 import android.os.Environment;
@@ -12,31 +12,37 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import ucla.nesl.ActivityLabeling.R;
 
 /**
  * Created by zxxia on 12/18/17.
  * Manage log storage
  */
 
-public class ActivityStorageManager {
-    private static final String TAG = ActivityStorageManager.class.getSimpleName();
-    private Context m_context;
+public class UserActivityStorageManager {
+    private static final String TAG = UserActivityStorageManager.class.getSimpleName();
+
     private static final String usrActLog = "stoppedActivities.csv";
     private static final String usrOngoingActLog = "ongoingActivities.csv";
     private static final String usrUlocLog = "uloc.txt";
     private static final String usrActTypeLog = "type.txt";
+
+    private Context mContext;
+
     private int numStoredOfActivities = 0;
 
 
-    ActivityStorageManager(Context context) {
-        m_context = context;
+    public UserActivityStorageManager(Context context) {
+        mContext = context;
     }
 
-    int getNumberOfStoredActivities() {
+    public int getNumberOfStoredActivities() {
         return numStoredOfActivities;
     }
 
-    void saveOneActivity(ActivityDetail actInfo) {
+    public void saveOneActivity(UserActivity actInfo) {
         if (!actInfo.isStopped()) {
             // Activity is not stopped yet.
             return;
@@ -47,7 +53,7 @@ public class ActivityStorageManager {
 
             Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
 
-            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), usrActLog);
+            File file = new File(getStorageDir(mContext.getString(R.string.app_name)), usrActLog);
 
             FileOutputStream stream;
             try{
@@ -60,17 +66,17 @@ public class ActivityStorageManager {
         }
     }
 
-    void saveOngoingActivities(List<ActivityDetail> actsList) {
+    public void saveOngoingActivities(List<UserActivity> actsList) {
         if (isExternalStorageWritable()){
 
             Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
-            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), usrOngoingActLog);
+            File file = new File(getStorageDir(mContext.getString(R.string.app_name)), usrOngoingActLog);
             FileOutputStream outputStream;
             try{
                 outputStream = new FileOutputStream(file, false);
 
                 for (int i = 0; i < actsList.size(); i++) {
-                    ActivityDetail actInfo = actsList.get(i);
+                    UserActivity actInfo = actsList.get(i);
                     if (!actInfo.isStopped()) {
 
                         String string = actInfo.toCSVLine();
@@ -85,54 +91,34 @@ public class ActivityStorageManager {
         }
     }
 
-    ArrayList<ActivityDetail> getActivityLogs() {
-        ArrayList<ActivityDetail> resultList  = new ArrayList<>();
+    public ArrayList<UserActivity> getActivityLogs() {
+        ArrayList<UserActivity> resultList  = new ArrayList<>();
         if (isExternalStorageWritable()) {
 
-            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), usrActLog);
+            File file = new File(getStorageDir(mContext.getString(R.string.app_name)), usrActLog);
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String csvLine;
+                long oneDayAgo = Calendar.getInstance().getTime().getTime() - TimeUnit.DAYS.toMillis(1);
                 while ((csvLine = br.readLine()) != null) {
                     numStoredOfActivities++;
-                    String[] row = csvLine.split(",", -1);
-                    Log.i(TAG, Integer.toString(row.length));
-                    long startTime = Long.valueOf(row[0]);
-                    long endTime = Long.valueOf(row[1]);
-                    double start_lat = Double.valueOf(row[4]);
-                    double start_lon = Double.valueOf(row[5]);
-                    double end_lat = Double.valueOf(row[6]);
-                    double end_lon = Double.valueOf(row[7]);
-                    String uloc = row[8];
-                    String type = row[9];
-                    String dscrpt = row[10];
-                    if (endTime >= Calendar.getInstance().getTime().getTime() - 24 * 3600 * 1000) {
-                        ActivityDetail actInfo = new ActivityDetail();
-                        actInfo.startTimeMs = startTime;
-                        actInfo.endTimeMs = endTime;
-                        actInfo.startLatitude = start_lat;
-                        actInfo.startLongitude = start_lon;
-                        actInfo.endLatitude = end_lat;
-                        actInfo.endLongitude = end_lon;
-                        actInfo.microLocationLabel = uloc;
-                        actInfo.type = type;
-                        actInfo.description = dscrpt;
-
+                    UserActivity actInfo = UserActivity.parseCSVLine(csvLine);
+                    if (actInfo.endTimeMs > oneDayAgo) {
                         resultList.add(actInfo);
                     }
                 }
                 br.close();
             }
             catch (IOException e) {
-                //You'll need to add proper error handling here
+                //TODO You'll need to add proper error handling here
             }
 
-            file = new File(getStorageDir(m_context.getString(R.string.app_name)), usrOngoingActLog);
+            file = new File(getStorageDir(mContext.getString(R.string.app_name)), usrOngoingActLog);
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String csvLine;
                 while ((csvLine = br.readLine()) != null) {
-                    resultList.add(ActivityDetail.parseCSVLine(csvLine));
+                    resultList.add(UserActivity.parseCSVLine(csvLine));
                 }
                 br.close();
             }
@@ -146,7 +132,7 @@ public class ActivityStorageManager {
     private ArrayList<String> load(String filename) {
         ArrayList<String> resultList  = new ArrayList<>();
         if (isExternalStorageWritable()) {
-            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), filename);
+            File file = new File(getStorageDir(mContext.getString(R.string.app_name)), filename);
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String line;
@@ -199,10 +185,10 @@ public class ActivityStorageManager {
         return dir;
     }
 
-    private void writeToFile(String filename, ArrayList<String> items, Boolean append) {
+    private void writeToFile(String filename, ArrayList<String> items, boolean append) {
         if (isExternalStorageWritable()){
             Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
-            File file = new File(getStorageDir(m_context.getString(R.string.app_name)), filename);
+            File file = new File(getStorageDir(mContext.getString(R.string.app_name)), filename);
             FileOutputStream stream;
             try{
                 stream = new FileOutputStream(file, append);

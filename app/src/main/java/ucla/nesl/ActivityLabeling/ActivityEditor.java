@@ -20,6 +20,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import ucla.nesl.ActivityLabeling.storage.UserActivity;
+import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
+
 
 public class ActivityEditor extends AppCompatActivity {
 
@@ -39,7 +42,7 @@ public class ActivityEditor extends AppCompatActivity {
     private ArrayList<String> mUsrUlocs;
     private ArrayList<String> mUsrActTypes;
 
-    private ActivityStorageManager mStoreManager;
+    private UserActivityStorageManager mStoreManager;
 
     Location mCurLoc;
 
@@ -57,7 +60,7 @@ public class ActivityEditor extends AppCompatActivity {
 
 
         updateValuesFromBundle(savedInstanceState);
-        mStoreManager = new ActivityStorageManager(this);
+        mStoreManager = new UserActivityStorageManager(this);
         if (mUsrActTypes == null) {
             mUsrActTypes = mStoreManager.loadUsrActTpyes();
         }
@@ -224,7 +227,7 @@ public class ActivityEditor extends AppCompatActivity {
                 EditText description;
                 description = findViewById(R.id.DescriptionET);
 
-                ActivityDetail act = new ActivityDetail();
+                UserActivity act = new UserActivity();
                 act.startTimeMs = mStartTime.getTime();
                 act.setStartLocation(mCurLoc);
                 act.microLocationLabel = mMicroLocation;

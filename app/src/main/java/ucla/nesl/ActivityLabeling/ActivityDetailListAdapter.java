@@ -13,6 +13,9 @@ import android.widget.TextView;
 import java.util.Calendar;
 import java.util.List;
 
+import ucla.nesl.ActivityLabeling.storage.UserActivity;
+import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
+
 /**
  * Created by zxxia on 12/3/17.
  * Class to construct the activity list in main activity.
@@ -20,13 +23,13 @@ import java.util.List;
 
 public class ActivityDetailListAdapter extends BaseAdapter {
     private MainActivity mMainActivity;
-    private List<ActivityDetail> mList;
+    private List<UserActivity> mList;
     private LayoutInflater mInflater;
-    private ActivityStorageManager mStore;
+    private UserActivityStorageManager mStore;
 
     private LocationService mService;
 
-    ActivityDetailListAdapter(MainActivity activity, List<ActivityDetail> actsList, ActivityStorageManager actStoreMngr, LocationService service) {
+    ActivityDetailListAdapter(MainActivity activity, List<UserActivity> actsList, UserActivityStorageManager actStoreMngr, LocationService service) {
         mMainActivity = activity;
         mList = actsList;
 
@@ -70,7 +73,7 @@ public class ActivityDetailListAdapter extends BaseAdapter {
         final TextView typeTV = rowView.findViewById(R.id.typeTV);
         final TextView dscrpTV = rowView.findViewById(R.id.dscrpTV);
 
-        final ActivityDetail actInfo = (ActivityDetail) getItem(position);
+        final UserActivity actInfo = (UserActivity) getItem(position);
 
 
         startTV.setText(Utils.timeToString(actInfo.startTimeMs));

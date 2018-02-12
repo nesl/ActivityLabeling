@@ -28,41 +28,26 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import ucla.nesl.ActivityLabeling.storage.UserActivity;
+import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
+
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     static final String CURRENT_LOCATION = "Current Location";
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-
-    /**
-     *  Constants for Activity Result Code
-     */
     private static final int ACTIVITY_EDITOR_RESULT_REQUEST_CODE = 0;
 
-    /**
-     * Constants for Permission Request Code
-     */
     private static final int PERMISSIONS_REQUEST_CODE = 1;
 
-    /**
-     * Keys for storing activity state in the Bundle.
-     */
+    // Keys for storing activity state in the Bundle.
     private static final String KEY_ACTIVITY_LIST = "ActivityList";
     private static final String KEY_LAST_KNOWN_LOCATION = "LastKnownLocation";
 
+    private ArrayList<UserActivity> actsList  = null;
 
-    /**
-     * Stores activity records
-     */
-    private ArrayList<ActivityDetail> actsList  = null;
-
-
-    /**
-     * Create an ArrayAdapter from List
-     */
     private ActivityDetailListAdapter mActivityListAdapter;
-
 
     // UI Widgets.
     private ListView mActivitiesListView;
@@ -70,7 +55,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private TextView mStorageStatTextView;
     private Button mStartLocationUpdateButton;
     private Button mStopLocationUpdateButton;
-
 
     // The BroadcastReceiver used to listen from broadcasts from the service.
     //private MyReceiver myReceiver;
@@ -80,6 +64,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     // Tracks the bound state of the service.
     private boolean mBound = false;
+
+    private Location mCurrentLocation;
+
+    private UserActivityStorageManager mStoreManager;
+
+    private static int numOfSavedActivities = 0;
 
 
     // Monitors the state of the connection to the service.
@@ -102,13 +92,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     };
 
 
-    private Location mCurrentLocation;
-
-    private ActivityStorageManager mStoreManager;
-
-
-    private static int numOfSavedActivities = 0;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         updateValuesFromBundle(savedInstanceState);
 
         // Instantiate the UI widgets
-        mStoreManager = new ActivityStorageManager(this);
+        mStoreManager = new UserActivityStorageManager(this);
         if (actsList == null) {
             actsList = new ArrayList<>();
             //display saved records within 24 hours
@@ -137,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             numOfSavedActivities = mStoreManager.getNumberOfStoredActivities();
         }
 
-        mActivityListAdapter = new ActivityDetailListAdapter( MainActivity.this, actsList, mStoreManager, mService);
+        mActivityListAdapter = new ActivityDetailListAdapter(this, actsList, mStoreManager, mService);
         mActivitiesListView.setAdapter(mActivityListAdapter);
         mAddActivityFab.setImageResource(R.drawable.plus_sign);
         mAddActivityFab.setOnClickListener(new View.OnClickListener() {
@@ -275,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         switch(requestCode){
             case PERMISSIONS_REQUEST_CODE:
-                if(grantResults.length <= 0) {
+                if (grantResults.length <= 0) {
                     // If user interaction was interrupted, the permission request is cancelled and
                     // receive empty arrays.
                     Log.i(TAG, "User interaction was cancelled.");
@@ -300,12 +283,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        switch(requestCode) {
+        switch (requestCode) {
             case ACTIVITY_EDITOR_RESULT_REQUEST_CODE:
-                if (resultCode  == RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     Log.i(TAG, "Received results from EditorActivity");
-                    actsList.add((ActivityDetail) data.getParcelableExtra(ActivityEditor.ACTIVITY_INFO));
+                    actsList.add((UserActivity) data.getParcelableExtra(ActivityEditor.ACTIVITY_INFO));
                     mActivityListAdapter.notifyDataSetChanged();
                 }
                 break;
@@ -319,8 +301,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
      */
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
+
         // Save the user's current activities list state
         savedInstanceState.putParcelableArrayList(KEY_ACTIVITY_LIST, actsList);
         savedInstanceState.putParcelable(KEY_LAST_KNOWN_LOCATION, mCurrentLocation);
@@ -329,7 +311,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }

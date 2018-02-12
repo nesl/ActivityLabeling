@@ -1,46 +1,72 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.storage;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.PrimaryKey;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+
+import ucla.nesl.ActivityLabeling.Utils;
 
 /**
  * Created by zxxia on 12/3/17.
  * Data structure used to pass activity information between activities.
  */
 
-public class ActivityDetail implements Parcelable {
+@Entity(tableName = "user_activity")
+public class UserActivity implements Parcelable {
 
-    long startTimeMs = -1;
-    long endTimeMs = -1;
-    double startLatitude = -1;
-    double startLongitude = -1;
-    double endLatitude = -1;
-    double endLongitude = -1;
-    @NonNull String microLocationLabel = "";
-    @NonNull String type = "";  //TODO: what type?
-    @NonNull String description = "";
+    @PrimaryKey(autoGenerate = true)
+    private int aID;
+
+    @ColumnInfo(name = "start_time_ms")
+    public long startTimeMs = -1;
+
+    @ColumnInfo(name = "end_time_ms")
+    public long endTimeMs = -1;
+
+    @ColumnInfo(name = "start_lat")
+    public double startLatitude = -1;
+
+    @ColumnInfo(name = "start_lon")
+    public double startLongitude = -1;
+
+    @ColumnInfo(name = "end_lat")
+    public double endLatitude = -1;
+
+    @ColumnInfo(name = "end_lon")
+    public double endLongitude = -1;
+
+    @ColumnInfo(name = "uloc_label")
+    public @NonNull String microLocationLabel = "";
+
+    @ColumnInfo(name = "act_type")
+    public @NonNull String type = "";  //TODO: what type?
+
+    @ColumnInfo(name = "description")
+    public @NonNull String description = "";
 
 
-    ActivityDetail() {
+    public UserActivity() {
     }
 
-    boolean isStopped() {
+    public boolean isStopped() {
         return endTimeMs != -1;
     }
 
-    void setStartLocation(@NonNull Location loc) {
+    public void setStartLocation(@NonNull Location loc) {
         startLatitude = loc.getLatitude();
         startLongitude = loc.getLongitude();
     }
 
-    void setEndLocation(@NonNull Location loc) {
+    public void setEndLocation(@NonNull Location loc) {
         endLatitude = loc.getLatitude();
         endLongitude = loc.getLongitude();
     }
 
-    String toCSVLine() {
+    public String toCSVLine() {
         //TODO: The 3rd and 4th columns are redundant
         return  Long.toString(startTimeMs) + ',' + Long.toString(endTimeMs) + ',' +
                 Utils.timeToString(startTimeMs) + ','+ Utils.timeToString(endTimeMs) + ',' +
@@ -50,12 +76,12 @@ public class ActivityDetail implements Parcelable {
                 description + ','+'\n';
     }
 
-    static ActivityDetail parseCSVLine(String csvLine) {
+    public static UserActivity parseCSVLine(String csvLine) {
         csvLine = csvLine.replace("\n", "").replace("\r", "");
         String[] row = csvLine.split(",", -1);
         //Log.i(TAG, csvLine);
 
-        ActivityDetail actInfo = new ActivityDetail();
+        UserActivity actInfo = new UserActivity();
 
         actInfo.startTimeMs = Long.valueOf(row[0]);
         actInfo.endTimeMs = Long.valueOf(row[1]);
@@ -74,8 +100,7 @@ public class ActivityDetail implements Parcelable {
         return 0;
     }
 
-    private ActivityDetail(Parcel in) {
-
+    private UserActivity(Parcel in) {
         startTimeMs = in.readLong();
         endTimeMs = in.readLong();
         startLatitude = in.readDouble();
@@ -88,7 +113,6 @@ public class ActivityDetail implements Parcelable {
     }
 
     public void writeToParcel(Parcel out, int flags) {
-
         out.writeLong(startTimeMs);
         out.writeLong(endTimeMs);
         out.writeDouble(startLatitude);
@@ -100,13 +124,13 @@ public class ActivityDetail implements Parcelable {
         out.writeString(description);
     }
 
-    public static final Parcelable.Creator<ActivityDetail> CREATOR = new Parcelable.Creator<ActivityDetail>() {
-        public ActivityDetail createFromParcel(Parcel in) {
-            return new ActivityDetail(in);
+    public static final Parcelable.Creator<UserActivity> CREATOR = new Parcelable.Creator<UserActivity>() {
+        public UserActivity createFromParcel(Parcel in) {
+            return new UserActivity(in);
         }
 
-        public ActivityDetail[] newArray(int size) {
-            return new ActivityDetail[size];
+        public UserActivity[] newArray(int size) {
+            return new UserActivity[size];
         }
     };
 }
