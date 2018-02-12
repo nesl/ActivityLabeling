@@ -10,12 +10,12 @@ import android.preference.PreferenceManager;
 
 public class SharedPreferenceHelper {
     //TODO: make the scope of the following keys private
-    static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
-    static final String KEY_LOCATION_CHANGE_NOTIFICATION = "location_change_notification";
-    static final String KEY_LOCATION_UPDATE_INTERVAL = "location_update_interval";
-    static final String KEY_LOCATION_MINIMUM_DISPLACEMENT = "location_minimum_displacement";
-    static final String KEY_ACTIVITY_DETECTION_INTERVAL = "activity_detection_interval";
-    static final String KEY_ACTIVITY_CHANGE_NOTIFICATION = "activity_change_notification";
+    public static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
+    public static final String KEY_LOCATION_CHANGE_NOTIFICATION = "location_change_notification";
+    public static final String KEY_LOCATION_UPDATE_INTERVAL = "location_update_interval";
+    public static final String KEY_LOCATION_MINIMUM_DISPLACEMENT = "location_minimum_displacement";
+    public static final String KEY_ACTIVITY_DETECTION_INTERVAL = "activity_detection_interval";
+    public static final String KEY_ACTIVITY_CHANGE_NOTIFICATION = "activity_change_notification";
 
     private SharedPreferences mSharedPreferences;
 

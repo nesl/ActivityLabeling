@@ -50,8 +50,8 @@ public class UserActivityListAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
-
+    public UserActivity getItem(int position) {
+        //TODO: it shouldn't need to reverse the order from inside
         // Display items in from  new(top) to old(bottom)
         return mList.get(getCount() - 1 - position);
     }

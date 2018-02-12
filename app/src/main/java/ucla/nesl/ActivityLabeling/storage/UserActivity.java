@@ -22,22 +22,22 @@ public class UserActivity implements Parcelable {
     private int aID;
 
     @ColumnInfo(name = "start_time_ms")
-    public long startTimeMs = -1;
+    public long startTimeMs = Utils.INVALID_TIME;
 
     @ColumnInfo(name = "end_time_ms")
-    public long endTimeMs = -1;
+    public long endTimeMs = Utils.INVALID_TIME;
 
     @ColumnInfo(name = "start_lat")
-    public double startLatitude = -1;
+    public double startLatitude = Utils.INVALID_LOCATION_VAL;
 
     @ColumnInfo(name = "start_lon")
-    public double startLongitude = -1;
+    public double startLongitude = Utils.INVALID_LOCATION_VAL;
 
     @ColumnInfo(name = "end_lat")
-    public double endLatitude = -1;
+    public double endLatitude = Utils.INVALID_LOCATION_VAL;
 
     @ColumnInfo(name = "end_lon")
-    public double endLongitude = -1;
+    public double endLongitude = Utils.INVALID_LOCATION_VAL;
 
     @ColumnInfo(name = "uloc_label")
     public @NonNull String microLocationLabel = "";
@@ -53,7 +53,7 @@ public class UserActivity implements Parcelable {
     }
 
     public boolean isStopped() {
-        return endTimeMs != -1;
+        return endTimeMs != Utils.INVALID_TIME;
     }
 
     public void setStartLocation(@NonNull Location loc) {

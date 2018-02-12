@@ -46,6 +46,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private static final String KEY_ACTIVITY_LIST = "ActivityList";
     private static final String KEY_LAST_KNOWN_LOCATION = "LastKnownLocation";
 
+    private static final String[] requiredPermissions = {
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+    };
+
     private ArrayList<UserActivity> actsList  = null;
 
     private UserActivityListAdapter mActivityListAdapter;
@@ -70,28 +77,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     private UserActivityStorageManager mStoreManager;
 
+    //TODO: remove this static variable
     private static int numOfSavedActivities = 0;
-
-
-    // Monitors the state of the connection to the service.
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.i(TAG, "onServiceConnected");
-            LocationService.LocalBinder binder = (LocationService.LocalBinder) service;
-            mService = binder.getService();
-            mActivityListAdapter.updateService(mService);
-            mBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mService = null;
-            mBound = false;
-        }
-    };
-
 
 
     @Override
@@ -124,46 +111,20 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         mActivityListAdapter = new UserActivityListAdapter(this, actsList, mStoreManager, mService);
         mActivitiesListView.setAdapter(mActivityListAdapter);
         mAddActivityFab.setImageResource(R.drawable.plus_sign);
-        mAddActivityFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(TAG, "Create a new activity log");
-                mCurrentLocation = mService.getCurrentLocation();
-                Intent intent = new Intent(getApplicationContext(), UserActivityEditorActivity.class);
-                intent.putExtra(CURRENT_LOCATION, mCurrentLocation);
-                startActivityForResult(intent, ACTIVITY_EDITOR_RESULT_REQUEST_CODE);
-            }
-        });
 
-        mStorageStatTextView.setText("Number of activities recorded: " + String.valueOf(numOfSavedActivities));
+        mStorageStatTextView.setText("Number of activities recorded: " + numOfSavedActivities);
 
-        if (!checkPermissions()) {
-            requestPermissions();
-        }
+        attachButtonClickEventListeners();
 
-        mStartLocationUpdateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (checkPermissions()) {
-                    mService.requestLocationUpdates();
-                    mService.sendActivityUpdatesRequest();
-                } else {
-                    requestPermissions();
-                }
-            }
-        });
 
-        mStopLocationUpdateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mService.removeLocationUpdates();
-                mService.removeActivityUpdates();
-            }
-        });
         boolean requestLocationUpdates = PreferenceManager
                 .getDefaultSharedPreferences(this)
                 .getBoolean(SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES, false);
         setButtonsState(requestLocationUpdates);
+
+        if (!checkPermissions()) {
+            requestPermissions();
+        }
     }
 
     @Override
@@ -171,7 +132,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         super.onStart();
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(this);
-
     }
 
     @Override
@@ -208,6 +168,31 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         Log.i(TAG, "onDestroy");
     }
 
+    // ==== UI Option menu =========================================================================
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+            startActivity(intent);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    // ==== Activity transition ====================================================================
 
     /**
      * Updates fields based on data stored in the bundle.
@@ -224,60 +209,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             if (savedInstanceState.keySet().contains(KEY_LAST_KNOWN_LOCATION)) {
                 mCurrentLocation = savedInstanceState.getParcelable(KEY_LAST_KNOWN_LOCATION);
             }
-        }
-    }
-
-    private boolean checkPermissions() {
-        int fineLocationPermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-        int coarseLocationPermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-        int writePermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int readPermissionState = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        return fineLocationPermissionState == PackageManager.PERMISSION_GRANTED &&
-                coarseLocationPermissionState == PackageManager.PERMISSION_GRANTED &&
-                writePermissionState == PackageManager.PERMISSION_GRANTED &&
-                readPermissionState == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void requestPermissions() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                        Manifest.permission.READ_EXTERNAL_STORAGE
-                }, PERMISSIONS_REQUEST_CODE
-        );
-    }
-
-
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        switch(requestCode){
-            case PERMISSIONS_REQUEST_CODE:
-                if (grantResults.length <= 0) {
-                    // If user interaction was interrupted, the permission request is cancelled and
-                    // receive empty arrays.
-                    Log.i(TAG, "User interaction was cancelled.");
-                } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.i(TAG, "Permission granted.");
-                    //startLocationUpdates();
-                    bindService(new Intent(this, LocationService.class), mServiceConnection,
-                            Context.BIND_AUTO_CREATE);
-                    //mService.requestLocationUpdates();
-                } else {
-                    // TODO: Handle permission denied case.
-                    // Permission denied.
-                    Log.i(TAG, "Permission denied.");
-                    Toast.makeText(this, "Permission denied.", Toast.LENGTH_LONG).show();
-                }
-                break;
-            default:
-                break;
         }
     }
 
@@ -310,30 +241,58 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         Log.i(TAG, "OnSaveInstanceState");
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    // ==== Service connection =====================================================================
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-            startActivity(intent);
-            return true;
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.i(TAG, "onServiceConnected");
+            LocationService.LocalBinder binder = (LocationService.LocalBinder) service;
+            mService = binder.getService();
+            mActivityListAdapter.updateService(mService);
+            mBound = true;
         }
 
-        return super.onOptionsItemSelected(item);
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+            mBound = false;
+        }
+    };
+
+    // ==== Button event registration and behavior definition ======================================
+    private void attachButtonClickEventListeners() {
+        mStartLocationUpdateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (checkPermissions()) {
+                    mService.requestLocationUpdates();
+                    mService.sendActivityUpdatesRequest();
+                } else {
+                    requestPermissions();
+                }
+            }
+        });
+
+        mStopLocationUpdateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mService.removeLocationUpdates();
+                mService.removeActivityUpdates();
+            }
+        });
+
+        mAddActivityFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(TAG, "Create a new activity log");
+                mCurrentLocation = mService.getCurrentLocation();
+                Intent intent = new Intent(getApplicationContext(), UserActivityEditorActivity.class);
+                intent.putExtra(CURRENT_LOCATION, mCurrentLocation);
+                startActivityForResult(intent, ACTIVITY_EDITOR_RESULT_REQUEST_CODE);
+            }
+        });
     }
-
-
 
     private void setButtonsState(boolean requestingLocationUpdates) {
         if (requestingLocationUpdates) {
@@ -345,11 +304,48 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
-    public void incrementNumOfStoredActivities() {
-        numOfSavedActivities++;
-        mStorageStatTextView.setText(String.valueOf("Number of activities recorded: " + numOfSavedActivities));
+    // ==== Permission related =====================================================================
+    private boolean checkPermissions() {
+        for (String permission : requiredPermissions) {
+            if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)
+                return false;
+        }
+        return true;
     }
 
+    private void requestPermissions() {
+        ActivityCompat.requestPermissions(this, requiredPermissions, PERMISSIONS_REQUEST_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        switch(requestCode){
+            case PERMISSIONS_REQUEST_CODE:
+                if (grantResults.length <= 0) {
+                    // If user interaction was interrupted, the permission request is cancelled and
+                    // receive empty arrays.
+                    Log.i(TAG, "User interaction was cancelled.");
+                } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.i(TAG, "Permission granted.");
+                    //startLocationUpdates();
+                    bindService(new Intent(this, LocationService.class), mServiceConnection,
+                            Context.BIND_AUTO_CREATE);
+                    //mService.requestLocationUpdates();
+                } else {
+                    // TODO: Handle permission denied case.
+                    // Permission denied.
+                    Log.i(TAG, "Permission denied.");
+                    Toast.makeText(this, "Permission denied.", Toast.LENGTH_LONG).show();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    // ==== Shared preference monitoring ===========================================================
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         // Update the buttons state depending on whether location updates are being requested.
@@ -359,4 +355,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES, false));
         }
     }
+
+    //TODO ==== To be removed ======================================================================
+    public void incrementNumOfStoredActivities() {
+        numOfSavedActivities++;
+        mStorageStatTextView.setText("Number of activities recorded: " + numOfSavedActivities);
+    }
+
 }

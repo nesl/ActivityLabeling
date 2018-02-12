@@ -52,6 +52,7 @@ public class UserActivityEditorActivity extends AppCompatActivity {
         Log.i(TAG, "OnCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Please input activity information");
         setSupportActionBar(toolbar);
@@ -110,13 +111,10 @@ public class UserActivityEditorActivity extends AppCompatActivity {
         mStoreManager.saveUserActType(mUsrActTypes);
     }
 
-    /**
-     * Stores activity data in the Bundle.
-     */
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        // Always call the superclass so it can save the view hierarchy state
         super.onSaveInstanceState(savedInstanceState);
+
         // Save the user's current activities list state
         savedInstanceState.putStringArrayList(KEY_USR_ULOC_LIST, mUsrUlocs);
         savedInstanceState.putStringArrayList(KEY_USR_ACT_TYPE_LIST, mUsrActTypes);
@@ -155,12 +153,11 @@ public class UserActivityEditorActivity extends AppCompatActivity {
         if (mCurLoc == null) {
             content = Utils.locToString(-1, -1);
         } else {
-            content = Utils.locToString(mCurLoc.getLatitude(), mCurLoc.getLongitude());
+            content = Utils.locToString(mCurLoc);
         }
         TextView startLocTV = findViewById(R.id.LocValTV);
         startLocTV.setText(content);
     }
-
 
     private void prepareSpinner(final int spinnerID, List<String> items) {
         Spinner sp = findViewById(spinnerID);

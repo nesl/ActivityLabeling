@@ -4,15 +4,10 @@ import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import ucla.nesl.ActivityLabeling.R;
 
@@ -30,6 +25,8 @@ public class UserActivityStorageManager {
     private static final String usrUlocLog = "uloc.txt";
     private static final String usrActTypeLog = "type.txt";
 
+    private UserActivityDatabase db;
+
     private Context mContext;
 
     private int numStoredOfActivities = 0;
@@ -37,7 +34,9 @@ public class UserActivityStorageManager {
 
     public UserActivityStorageManager(Context context) {
         mContext = context;
+        db = UserActivityDatabase.getAppDatabase(context);
     }
+
     public int getNumberOfStoredActivities() {
         return numStoredOfActivities;
     }
@@ -92,7 +91,7 @@ public class UserActivityStorageManager {
     }
 
     public ArrayList<UserActivity> getActivityLogs() {
-        ArrayList<UserActivity> resultList  = new ArrayList<>();
+        /*ArrayList<UserActivity> resultList  = new ArrayList<>();
         if (isExternalStorageWritable()) {
 
             File file = new File(getStorageDir(mContext.getString(R.string.app_name)), usrActLog);
@@ -126,9 +125,10 @@ public class UserActivityStorageManager {
                 //You'll need to add proper error handling here
             }
         }
-        return resultList;
+        return resultList;*/
+        return new ArrayList(db.getOnGoingAndPast24HoursUserActivitiesLatestFirst());
     }
-
+/*
     private ArrayList<String> load(String filename) {
         ArrayList<String> resultList  = new ArrayList<>();
         if (isExternalStorageWritable()) {
@@ -156,7 +156,7 @@ public class UserActivityStorageManager {
     public ArrayList<String> loadUsrActTpyes() {
         return load(usrActTypeLog);
     }
-
+*/
     public void saveUsrUloc(ArrayList<String> items) {
         writeToFile(usrUlocLog, items, false);
     }
