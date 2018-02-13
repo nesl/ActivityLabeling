@@ -1,9 +1,6 @@
 package ucla.nesl.ActivityLabeling;
 
 import android.app.ActivityManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -14,14 +11,12 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.location.Location;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -40,19 +35,22 @@ import com.google.android.gms.tasks.Task;
 
 import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
 
+
+/**
+ * Created by zxxia.
+ *
+ * This service provides the following functionalities:
+ *   - Collecting location data
+ *   - Collecting motion activity data
+ *   - Sending notifications upon location or motion activity changes
+ */
+
 public class LocationService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     private static final String TAG = LocationService.class.getSimpleName();
 
-    /**
-     * The name of the channel for notifications.
-     */
-    private static final String CHANNEL_ID = "channel_0";
+    private static final long DETECTION_INTERVAL_IN_MILLISECONDS = 10000L;
 
-    private static final long DETECTION_INTERVAL_IN_MILLISECONDS = 10000;
-
-
-    private static final float MINIMUM_DISPLACEMENT_IN_METERS = 50;
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
@@ -67,42 +65,21 @@ public class LocationService extends Service implements SharedPreferences.OnShar
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
     /**
-     * The identifier for the notification displayed for the foreground service.
-     */
-    private static final int NOTIFICATION_FOREGROUND_SERVICE_ID = 12345;
-    private static final int NOTIFICATION_LOCATION_CHANGED_ID = 12346;
-    private static final int NOTIFICATION_ACTIVITY_CHANGED_ID = 12347;
-
-    /**
      * Used to check whether the bound activity has really gone away and not unbound as part of an
      * orientation change. We create a foreground service notification only if the former takes
      * place.
      */
     private boolean mChangingConfiguration = false;
 
-    private NotificationManager mNotificationManager;
+    private NotificationHelper notificationHelper;
 
 
-    /**
-     * Contains parameters used by {@link com.google.android.gms.location.FusedLocationProviderApi}.
-     */
+    // Location status
     private LocationRequest mLocationRequest;
-
-    /**
-     * Provides access to the Fused Location Provider API.
-     */
     private FusedLocationProviderClient mFusedLocationClient;
-
-
-
+    private Location currentLocation;
 
     private Handler mServiceHandler;
-
-    /**
-     * The current location.
-     */
-    private Location mLocation;
-
 
     private final IBinder mBinder = new LocalBinder();
 
@@ -132,18 +109,8 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         HandlerThread handlerThread = new HandlerThread(TAG);
         handlerThread.start();
         mServiceHandler = new Handler(handlerThread.getLooper());
-        mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        // Android O requires a Notification Channel.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getString(R.string.app_name);
-            // Create the channel for the notification
-            NotificationChannel mChannel =
-                    new NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_DEFAULT);
-
-            // Set the Notification Channel for the Notification Manager.
-            mNotificationManager.createNotificationChannel(mChannel);
-        }
+        notificationHelper = new NotificationHelper(this);
 
         mActivityRecognitionClient = new ActivityRecognitionClient(this);
         mReceiver = new DetectedActivityReceiver();
@@ -157,8 +124,9 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
-        mNotificationManager.cancel(NOTIFICATION_LOCATION_CHANGED_ID);
-        mNotificationManager.cancel(NOTIFICATION_ACTIVITY_CHANGED_ID);
+
+        notificationHelper.cancelNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
+        notificationHelper.cancelNotification(NotificationHelper.Type.LOCATION_CHANGED);
         mServiceHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
@@ -171,9 +139,8 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver,
                 new IntentFilter(DetectedActivitiesIntentService.ACTION_BROADCAST));
 
-
-        mNotificationManager.cancel(NOTIFICATION_LOCATION_CHANGED_ID);
-        mNotificationManager.cancel(NOTIFICATION_ACTIVITY_CHANGED_ID);
+        notificationHelper.cancelNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
+        notificationHelper.cancelNotification(NotificationHelper.Type.LOCATION_CHANGED);
         // Tells the system to not try to recreate the service after it has been killed
         return START_NOT_STICKY;
     }
@@ -226,69 +193,11 @@ public class LocationService extends Service implements SharedPreferences.OnShar
                 startForeground(NOTIFICATION_ID, getNotification());
             }
              */
-            startForeground(NOTIFICATION_FOREGROUND_SERVICE_ID, getNotification(NOTIFICATION_FOREGROUND_SERVICE_ID));
+            notificationHelper.serviceNotifyStartingForeground(
+                    this, NotificationHelper.Type.FOREGROUND_SERVICE);
         }
         return true; // Ensures onRebind() is called when a client re-binds.
     }
-
-
-    /**
-     * Returns the {@link NotificationCompat} used as part of the foreground service.
-     */
-    private Notification getNotification(int notificationID) {
-        // The PendingIntent to launch activity.
-        PendingIntent activityPendingIntent = PendingIntent.getActivity(this, 0,
-                new Intent(this, MainActivity.class), 0);
-        String title;
-        switch (notificationID) {
-            case NOTIFICATION_FOREGROUND_SERVICE_ID:
-                title = "Location and Google Activity Service";
-                break;
-            case NOTIFICATION_LOCATION_CHANGED_ID:
-                title = "Location Changed";
-                break;
-            case NOTIFICATION_ACTIVITY_CHANGED_ID:
-                title = "Google Detected Activity Changed";
-                break;
-            default:
-                title = "";
-                break;
-        }
-        NotificationCompat.Builder builder;
-        if (notificationID == NOTIFICATION_FOREGROUND_SERVICE_ID) {
-            CharSequence text = "Monitoring location and user activity";
-            builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentText(text)
-                    .setContentTitle(title)
-                    .setOngoing(true)
-                    .setPriority(Notification.PRIORITY_HIGH)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setTicker(text)
-                    .setWhen(System.currentTimeMillis())
-                    .setContentIntent(activityPendingIntent);
-        } else {
-            CharSequence text = "You might want to update your activity information";
-            builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setAutoCancel(true)
-                    .setContentText(text)
-                    .setContentTitle(title)
-                    .setPriority(Notification.PRIORITY_DEFAULT)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setTicker(text)
-                    .setWhen(System.currentTimeMillis())
-                    .setContentIntent(activityPendingIntent);
-        }
-
-
-        // Set the Channel ID for Android O.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder.setChannelId(CHANNEL_ID); // Channel ID
-        }
-
-        return builder.build();
-    }
-
-
 
     // ==== Location callback and location request =================================================
     /**
@@ -299,13 +208,12 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         public void onLocationResult(LocationResult locationResult) {
             super.onLocationResult(locationResult);
 
-            mLocation = locationResult.getLastLocation();
+            currentLocation = locationResult.getLastLocation();
 
             boolean isForeground = serviceIsRunningInForeground(LocationService.this);
             boolean locationChangeNotification = preferenceHelper.getLocationChangeNotification();
             if (isForeground && locationChangeNotification) {
-                mNotificationManager.notify(NOTIFICATION_LOCATION_CHANGED_ID,
-                        getNotification(NOTIFICATION_LOCATION_CHANGED_ID));
+                notificationHelper.sendNotification(NotificationHelper.Type.LOCATION_CHANGED);
             }
             Log.i(TAG, "Received Location Update");
         }
@@ -365,10 +273,6 @@ public class LocationService extends Service implements SharedPreferences.OnShar
     }
 
 
-    /**
-     * Class used for the client Binder.  Since this service runs in the same process as its
-     * clients, we don't need to deal with IPC.
-     */
     public class LocalBinder extends Binder {
         LocationService getService() {
             return LocationService.this;
@@ -407,7 +311,7 @@ public class LocationService extends Service implements SharedPreferences.OnShar
                     boolean isForeground = serviceIsRunningInForeground(LocationService.this);
                     boolean locationChangeNotification = preferenceHelper.getLocationChangeNotification();
                     if (isForeground && locationChangeNotification) {
-                        mNotificationManager.notify(NOTIFICATION_ACTIVITY_CHANGED_ID, getNotification(NOTIFICATION_ACTIVITY_CHANGED_ID));
+                        notificationHelper.sendNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
                     }
                 } else {
                     Log.i(TAG, "Same detected activities.");
@@ -418,7 +322,7 @@ public class LocationService extends Service implements SharedPreferences.OnShar
     }
 
     public Location getCurrentLocation() {
-        return mLocation;
+        return currentLocation;
     }
 
 
@@ -492,7 +396,6 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         // requestActivityUpdates() and removeActivityUpdates().
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
-
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
