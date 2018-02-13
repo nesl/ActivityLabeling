@@ -93,10 +93,7 @@ public class LocationService extends Service implements SharedPreferences.OnShar
      */
     private FusedLocationProviderClient mFusedLocationClient;
 
-    /**
-     * Callback for changes in location.
-     */
-    private LocationCallback mLocationCallback;
+
 
 
     private Handler mServiceHandler;
@@ -129,7 +126,6 @@ public class LocationService extends Service implements SharedPreferences.OnShar
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        createLocationCallback();
         createLocationRequest();
 
 
@@ -154,6 +150,17 @@ public class LocationService extends Service implements SharedPreferences.OnShar
 
         preferenceHelper = new SharedPreferenceHelper(this);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
+        mNotificationManager.cancel(NOTIFICATION_LOCATION_CHANGED_ID);
+        mNotificationManager.cancel(NOTIFICATION_ACTIVITY_CHANGED_ID);
+        mServiceHandler.removeCallbacksAndMessages(null);
+        super.onDestroy();
     }
 
 
@@ -208,7 +215,7 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         // do nothing. Otherwise, we make this service a foreground service.
 
         //TODO: check requesting state
-        if (!mChangingConfiguration && preferenceHelper.getRequestingLocationUpdates()) {
+        if (!mChangingConfiguration) {
             Log.i(TAG, "Starting foreground service");
             /*
             // TODO(developer). If targeting O, use the following code.
@@ -224,40 +231,6 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         return true; // Ensures onRebind() is called when a client re-binds.
     }
 
-    /**
-     * Makes a request for location updates. Note that in this sample we merely log the
-     * {@link SecurityException}.
-     */
-    public void requestLocationUpdates() {
-        Log.i(TAG, "Requesting location updates");
-
-        preferenceHelper.setRequestingLocationUpdates(true);
-        startService(new Intent(getApplicationContext(), LocationService.class));
-        try {
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                    mLocationCallback, Looper.myLooper());
-        } catch (SecurityException unlikely) {
-            preferenceHelper.setRequestingLocationUpdates(false);
-            Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
-        }
-    }
-
-
-    /**
-     * Removes location updates. Note that in this sample we merely log the
-     * {@link SecurityException}.
-     */
-    public void removeLocationUpdates() {
-        Log.i(TAG, "Removing location updates");
-        try {
-            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-            preferenceHelper.setRequestingLocationUpdates(false);
-            stopSelf();
-        } catch (SecurityException unlikely) {
-            preferenceHelper.setRequestingLocationUpdates(false);
-            Log.e(TAG, "Lost location permission. Could not remove updates. " + unlikely);
-        }
-    }
 
     /**
      * Returns the {@link NotificationCompat} used as part of the foreground service.
@@ -316,38 +289,35 @@ public class LocationService extends Service implements SharedPreferences.OnShar
     }
 
 
+
+    // ==== Location callback and location request =================================================
     /**
-     * Creates a callback for receiving location events.
+     * Callback for changes in location.
      */
-    private void createLocationCallback() {
-        Log.i(TAG, "Create LocationCallback");
-        mLocationCallback = new LocationCallback() {
+    private LocationCallback mLocationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            super.onLocationResult(locationResult);
 
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
+            mLocation = locationResult.getLastLocation();
 
-                mLocation = locationResult.getLastLocation();
-
-                boolean isForeground = serviceIsRunningInForeground(LocationService.this);
-                boolean locationChangeNotification = preferenceHelper.getLocationChangeNotification();
-                if (isForeground && locationChangeNotification) {
-                    mNotificationManager.notify(NOTIFICATION_LOCATION_CHANGED_ID,
-                            getNotification(NOTIFICATION_LOCATION_CHANGED_ID));
-                }
-                Log.i(TAG, "Received Location Update");
+            boolean isForeground = serviceIsRunningInForeground(LocationService.this);
+            boolean locationChangeNotification = preferenceHelper.getLocationChangeNotification();
+            if (isForeground && locationChangeNotification) {
+                mNotificationManager.notify(NOTIFICATION_LOCATION_CHANGED_ID,
+                        getNotification(NOTIFICATION_LOCATION_CHANGED_ID));
             }
+            Log.i(TAG, "Received Location Update");
+        }
 
-            @Override
-            public void onLocationAvailability(LocationAvailability locationAvailability) {
-                super.onLocationAvailability(locationAvailability);
-                if (!locationAvailability.isLocationAvailable()) {
-                    Toast.makeText(getApplicationContext(), "Current Location cannot be determined.", Toast.LENGTH_LONG).show();
-                }
+        @Override
+        public void onLocationAvailability(LocationAvailability locationAvailability) {
+            super.onLocationAvailability(locationAvailability);
+            if (!locationAvailability.isLocationAvailable()) {
+                Toast.makeText(getApplicationContext(), "Current Location cannot be determined.", Toast.LENGTH_LONG).show();
             }
-        };
-    }
-
+        }
+    };
 
     /**
      * Sets the location request parameters.
@@ -355,32 +325,43 @@ public class LocationService extends Service implements SharedPreferences.OnShar
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();
 
-        // Sets the desired interval for active location updates. This interval is
-        // inexact. You may not receive updates at all if no location sources are available, or
-        // you may receive them slower than requested. You may also receive updates faster than
-        // requested if other applications are requesting location at a faster interval.
-        long interval = preferenceHelper.getLocationUpdateInterval();
-        mLocationRequest.setInterval(interval);
+        mLocationRequest.setInterval(preferenceHelper.getLocationUpdateInterval());
 
         // Sets the fastest rate for active location updates. This interval is exact, and your
         // application will never receive updates faster than this value.
-        long fastestInterval = interval / 2;
-        mLocationRequest.setFastestInterval(fastestInterval);
+        //long fastestInterval = interval / 2;
+        //mLocationRequest.setFastestInterval(fastestInterval);
 
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setSmallestDisplacement(preferenceHelper.getLocationMinimumDisplacement());
     }
 
-    @Override
-    public void onDestroy()
-    {
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .unregisterOnSharedPreferenceChangeListener(this);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
-        mNotificationManager.cancel(NOTIFICATION_LOCATION_CHANGED_ID);
-        mNotificationManager.cancel(NOTIFICATION_ACTIVITY_CHANGED_ID);
-        mServiceHandler.removeCallbacksAndMessages(null);
-        super.onDestroy();
+    /**
+     * Makes a request for location updates.
+     */
+    public void requestLocationUpdates() {
+        Log.i(TAG, "Requesting location updates");
+
+        startService(new Intent(getApplicationContext(), LocationService.class));
+        try {
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                    mLocationCallback, Looper.myLooper());
+        } catch (SecurityException unlikely) {
+            Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
+        }
+    }
+
+    /**
+     * Removes location updates.
+     */
+    public void removeLocationUpdates() {
+        Log.i(TAG, "Removing location updates");
+        try {
+            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+            stopSelf();
+        } catch (SecurityException unlikely) {
+            Log.e(TAG, "Lost location permission. Could not remove updates. " + unlikely);
+        }
     }
 
 
@@ -520,22 +501,13 @@ public class LocationService extends Service implements SharedPreferences.OnShar
                 key.equals(SharedPreferenceHelper.KEY_LOCATION_MINIMUM_DISPLACEMENT)) {
             Log.i(TAG, "Location Setting Changed");
             createLocationRequest();
-            boolean requestLocationUpdates = mSharedPreferences.getBoolean(
-                    SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES, false);
-            if (requestLocationUpdates) {
-                removeLocationUpdates();
-                requestLocationUpdates();
-            }
+
+            removeLocationUpdates();
+            requestLocationUpdates();
         } else if (key.equals(SharedPreferenceHelper.KEY_ACTIVITY_DETECTION_INTERVAL)) {
-            //TODO: should that be KEY_REQUESTING_ACTIVITY_UPDATES? don't see the relevance to
-            // location
-            boolean requestLocationUpdates = mSharedPreferences.getBoolean(
-                    SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES, false);
-            if (requestLocationUpdates) {
-                Log.i(TAG, "Activity Setting Changed");
-                removeActivityUpdates();
-                sendActivityUpdatesRequest();
-            }
+            Log.i(TAG, "Activity Setting Changed");
+            removeActivityUpdates();
+            sendActivityUpdatesRequest();
         }
     }
 }

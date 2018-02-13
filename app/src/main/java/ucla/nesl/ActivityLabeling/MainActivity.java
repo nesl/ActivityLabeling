@@ -6,12 +6,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -30,9 +28,8 @@ import java.util.ArrayList;
 
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
-import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
 
-public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -116,22 +113,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         attachButtonClickEventListeners();
 
-
-        boolean requestLocationUpdates = PreferenceManager
-                .getDefaultSharedPreferences(this)
-                .getBoolean(SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES, false);
-        setButtonsState(requestLocationUpdates);
-
         if (!checkPermissions()) {
             requestPermissions();
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -154,8 +138,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             unbindService(mServiceConnection);
             mBound = false;
         }
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .unregisterOnSharedPreferenceChangeListener(this);
         super.onStop();
     }
 
@@ -342,17 +324,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 break;
             default:
                 break;
-        }
-    }
-
-    // ==== Shared preference monitoring ===========================================================
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        // Update the buttons state depending on whether location updates are being requested.
-        Log.i(TAG, "Location Update request changed");
-        if (key.equals(SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES)) {
-            setButtonsState(sharedPreferences.getBoolean(
-                    SharedPreferenceHelper.KEY_REQUESTING_LOCATION_UPDATES, false));
         }
     }
 

@@ -6,11 +6,12 @@ import android.preference.PreferenceManager;
 
 /**
  * Created by timestring on 2/2/18.
+ *
+ * A helper class which allows activities or services to easily access shared preferences globally.
  */
 
 public class SharedPreferenceHelper {
     //TODO: make the scope of the following keys private
-    public static final String KEY_REQUESTING_LOCATION_UPDATES = "requesting_locaction_updates";
     public static final String KEY_LOCATION_CHANGE_NOTIFICATION = "location_change_notification";
     public static final String KEY_LOCATION_UPDATE_INTERVAL = "location_update_interval";
     public static final String KEY_LOCATION_MINIMUM_DISPLACEMENT = "location_minimum_displacement";
@@ -21,14 +22,6 @@ public class SharedPreferenceHelper {
 
     public SharedPreferenceHelper(Context context) {
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-    }
-
-    public boolean getRequestingLocationUpdates() {
-        return mSharedPreferences.getBoolean(KEY_REQUESTING_LOCATION_UPDATES, false);
-    }
-
-    public void setRequestingLocationUpdates(boolean value) {
-        mSharedPreferences.edit().putBoolean(KEY_REQUESTING_LOCATION_UPDATES, value).apply();
     }
 
     public boolean getLocationChangeNotification() {

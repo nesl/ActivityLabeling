@@ -29,9 +29,9 @@ public class CustomDialog extends AppCompatDialogFragment {
 
 
 
+    //TODO: the comment is out-dated
     /**
-     * Create a new instance of MyDialogFragment, providing "num"
-     * as an argument.
+     * Create a new instance of MyDialogFragment, providing "num" as an argument.
      */
     public static CustomDialog newInstance(ArrayList<String> items) {
         CustomDialog frag = new CustomDialog();
