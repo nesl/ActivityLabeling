@@ -15,9 +15,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
@@ -36,7 +34,7 @@ public class UserActivityEditorActivity extends AppCompatActivity {
     private static final String KEY_USR_ULOC_LIST = "User MicroLocation Items";
     private static final String KEY_USR_ACT_TYPE_LIST = "User Activity Type Items";
 
-    private Date mStartTime;
+    private long mStartTime;
     private String mMicroLocation;
     private String mType;
 
@@ -45,7 +43,7 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
     private UserActivityStorageManager mStoreManager;
 
-    Location mCurLoc;
+    private Location mCurLoc;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,25 +56,12 @@ public class UserActivityEditorActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
-        mCurLoc = getIntent().getExtras().getParcelable(MainActivity.CURRENT_LOCATION);
-
+        mCurLoc = getIntent().getExtras().getParcelable(MainActivity.INTENT_KEY_CURRENT_LOCATION);
 
         updateValuesFromBundle(savedInstanceState);
         mStoreManager = new UserActivityStorageManager(this);
-        if (mUsrActTypes == null) {
-            mUsrActTypes = mStoreManager.loadUsrActTpyes();
-        }
-        if (mUsrUlocs == null) {
-            mUsrUlocs = mStoreManager.loadUsrUlocs();
-        }
-        if (mUsrUlocs.size() == 0) {
-            String[] ulocArray = getResources().getStringArray(R.array.microlocations_array);
-            mUsrUlocs = new ArrayList<>(Arrays.asList(ulocArray));
-        }
-        if (mUsrActTypes.size() == 0) {
-            String[] typeArray = getResources().getStringArray(R.array.activityTypes_array);
-            mUsrActTypes = new ArrayList<>(Arrays.asList(typeArray));
-        }
+        mUsrActTypes = mStoreManager.loadUsrActTpyes();
+        mUsrUlocs = mStoreManager.loadUsrUlocs();
 
         prepareStartTime();
         prepareStartLocation();
@@ -87,28 +72,9 @@ public class UserActivityEditorActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        Log.i(TAG, "OnStart");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.i(TAG, "OnResume");
-
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-        mStoreManager.saveUsrUloc(mUsrUlocs);
-        mStoreManager.saveUserActType(mUsrActTypes);
+
     }
 
     @Override
@@ -142,21 +108,15 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
 
     private void prepareStartTime() {
-        mStartTime = Calendar.getInstance().getTime();
-        String formattedTime = Utils.timeToString(mStartTime.getTime());
+        mStartTime = Calendar.getInstance().getTime().getTime();
+        String formattedTime = Utils.timeToString(mStartTime);
         TextView startTimeTV = findViewById(R.id.StartTimeValTV);
         startTimeTV.setText(formattedTime);
     }
 
     private void prepareStartLocation() {
-        String content;
-        if (mCurLoc == null) {
-            content = Utils.locToString(-1, -1);
-        } else {
-            content = Utils.locToString(mCurLoc);
-        }
         TextView startLocTV = findViewById(R.id.LocValTV);
-        startLocTV.setText(content);
+        startLocTV.setText(Utils.locToString(mCurLoc));
     }
 
     private void prepareSpinner(final int spinnerID, List<String> items) {
@@ -196,12 +156,7 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
 
     private void prepareBtns() {
-
         Button ulocCustomizeBtn = findViewById(R.id.ulocAddBtn);
-        Button typeCutomizeBtn = findViewById(R.id.typeAddBtn);
-        // Send user activity information back to MainActivity
-        Button saveBtn = findViewById(R.id.SaveBtn);
-
         ulocCustomizeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -210,6 +165,7 @@ public class UserActivityEditorActivity extends AppCompatActivity {
             }
         });
 
+        Button typeCutomizeBtn = findViewById(R.id.typeAddBtn);
         typeCutomizeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -218,23 +174,28 @@ public class UserActivityEditorActivity extends AppCompatActivity {
             }
         });
 
+        Button saveBtn = findViewById(R.id.SaveBtn);
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent myIntent = new Intent(getApplicationContext(), MainActivity.class);
-                EditText description;
-                description = findViewById(R.id.DescriptionET);
+                // Update labels of micro-location and activity spinners
+                mStoreManager.saveUsrUloc(mUsrUlocs);
+                mStoreManager.saveUserActType(mUsrActTypes);
+
+                // Create a UserActivity entry
+                EditText description = findViewById(R.id.DescriptionET);
 
                 UserActivity act = new UserActivity();
-                act.startTimeMs = mStartTime.getTime();
+                act.startTimeMs = mStartTime;
                 act.setStartLocation(mCurLoc);
                 act.microLocationLabel = mMicroLocation;
                 act.type = mType;
                 act.description = description.getText().toString();
 
+                Intent myIntent = new Intent(getApplicationContext(), MainActivity.class);
                 myIntent.putExtra(ACTIVITY_INFO, act);
                 setResult(RESULT_OK, myIntent);
-                finish();
+                finish(); // TODO: do we need this line?
             }
         });
     }

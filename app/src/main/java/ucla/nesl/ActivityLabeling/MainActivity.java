@@ -34,13 +34,13 @@ import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    static final String CURRENT_LOCATION = "Current Location";
-
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int ACTIVITY_EDITOR_RESULT_REQUEST_CODE = 0;
 
     private static final int PERMISSIONS_REQUEST_CODE = 1;
+
+    public static final String INTENT_KEY_CURRENT_LOCATION = "Current Location";
 
     // Keys for storing activity state in the Bundle.
     private static final String KEY_ACTIVITY_LIST = "ActivityList";
@@ -288,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 Log.i(TAG, "Create a new activity log");
                 mCurrentLocation = mService.getCurrentLocation();
                 Intent intent = new Intent(getApplicationContext(), UserActivityEditorActivity.class);
-                intent.putExtra(CURRENT_LOCATION, mCurrentLocation);
+                intent.putExtra(INTENT_KEY_CURRENT_LOCATION, mCurrentLocation);
                 startActivityForResult(intent, ACTIVITY_EDITOR_RESULT_REQUEST_CODE);
             }
         });

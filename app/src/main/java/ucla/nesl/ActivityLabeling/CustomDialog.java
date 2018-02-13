@@ -71,7 +71,6 @@ public class CustomDialog extends AppCompatDialogFragment {
             public void onClick(View v) {
                 String content = mInputEt.getText().toString();
                 if (!content.isEmpty()) {
-
                     mItems.add(content);
                     mInputEt.setText("");
                     mItemsAdapter.notifyDataSetChanged();

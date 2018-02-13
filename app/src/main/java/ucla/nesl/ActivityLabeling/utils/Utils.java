@@ -24,7 +24,6 @@ public class Utils {
         return DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(timeMs)).toString();
     }
 
-
     public static String locToString(Location location) {
         if (location == null) {
             return locToString(INVALID_LOCATION_VAL, INVALID_LOCATION_VAL);
