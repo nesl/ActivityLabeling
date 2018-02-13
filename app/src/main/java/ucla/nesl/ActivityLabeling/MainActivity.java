@@ -3,11 +3,9 @@ package ucla.nesl.ActivityLabeling;
 
 import android.Manifest;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -70,12 +68,9 @@ public class MainActivity extends AppCompatActivity {
     // Tracks the bound state of the service.
     private boolean mBound = false;
 
-    private Location mCurrentLocation;
-
     private UserActivityStorageManager mStoreManager;
 
-    //TODO: remove this static variable
-    private static int numOfSavedActivities = 0;
+    private int numSavedActivities;
 
 
     @Override
@@ -101,15 +96,15 @@ public class MainActivity extends AppCompatActivity {
         if (actsList == null) {
             actsList = new ArrayList<>();
             //display saved records within 24 hours
-            actsList = mStoreManager.getActivityLogs();
-            numOfSavedActivities = mStoreManager.getNumberOfStoredActivities();
+            actsList = mStoreManager.getRecentActivities();
+            numSavedActivities = mStoreManager.getNumTotalUserActivities();
         }
 
         mActivityListAdapter = new UserActivityListAdapter(this, actsList, mStoreManager, mService);
         mActivitiesListView.setAdapter(mActivityListAdapter);
         mAddActivityFab.setImageResource(R.drawable.plus_sign);
 
-        mStorageStatTextView.setText("Number of activities recorded: " + numOfSavedActivities);
+        mStorageStatTextView.setText("Number of activities recorded: " + numSavedActivities);
 
         attachButtonClickEventListeners();
 
@@ -118,37 +113,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onResume() {
-        Log.i(TAG, "onResume");
-        super.onResume();
-        // Bind to the service. If the service is in foreground mode, this signals to the service
-        // that since this activity is in the foreground, the service can exit foreground mode.
-        bindService(new Intent(this, LocationService.class), mServiceConnection,
-                Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onStop() {
-        Log.i(TAG, "onStop");
-        if (mBound) {
-            // Unbind from the service. This signals to the service that this activity is no longer
-            // in the foreground, and the service can respond by promoting itself to a foreground
-            // service.
-            unbindService(mServiceConnection);
-            mBound = false;
-        }
-        super.onStop();
-    }
-
-
+    /*
     @Override
     protected void onDestroy() {
-        //Save all unfinished activities to storage
+        // Save all unfinished activities to storage
         mStoreManager.saveOngoingActivities(actsList);
         super.onDestroy();
         Log.i(TAG, "onDestroy");
     }
+    */
 
     // ==== UI Option menu =========================================================================
     @Override
@@ -175,12 +148,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ==== Activity transition ====================================================================
-
-    /**
-     * Updates fields based on data stored in the bundle.
-     *
-     * @param savedInstanceState The activity state saved in the Bundle.
-     */
     private void updateValuesFromBundle(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             // Restore value of members from saved state
@@ -188,12 +155,8 @@ public class MainActivity extends AppCompatActivity {
             if (savedInstanceState.keySet().contains(KEY_ACTIVITY_LIST)) {
                 actsList = savedInstanceState.getParcelableArrayList(KEY_ACTIVITY_LIST);
             }
-            if (savedInstanceState.keySet().contains(KEY_LAST_KNOWN_LOCATION)) {
-                mCurrentLocation = savedInstanceState.getParcelable(KEY_LAST_KNOWN_LOCATION);
-            }
         }
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -201,14 +164,17 @@ public class MainActivity extends AppCompatActivity {
             case ACTIVITY_EDITOR_RESULT_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
                     Log.i(TAG, "Received results from EditorActivity");
-                    actsList.add((UserActivity) data.getParcelableExtra(UserActivityEditorActivity.ACTIVITY_INFO));
+                    UserActivity newActivity = data.getParcelableExtra(UserActivityEditorActivity.ACTIVITY_INFO);
+                    actsList.add(newActivity);
                     mActivityListAdapter.notifyDataSetChanged();
+
+                    numSavedActivities++;
+                    mStorageStatTextView.setText("Number of activities recorded: " + numSavedActivities);
                 }
                 break;
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
-
 
     /**
      * Stores activity data in the Bundle.
@@ -219,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Save the user's current activities list state
         savedInstanceState.putParcelableArrayList(KEY_ACTIVITY_LIST, actsList);
-        savedInstanceState.putParcelable(KEY_LAST_KNOWN_LOCATION, mCurrentLocation);
         Log.i(TAG, "OnSaveInstanceState");
     }
 
@@ -268,9 +233,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "Create a new activity log");
-                mCurrentLocation = mService.getCurrentLocation();
-                Intent intent = new Intent(getApplicationContext(), UserActivityEditorActivity.class);
-                intent.putExtra(INTENT_KEY_CURRENT_LOCATION, mCurrentLocation);
+                Intent intent = new Intent(MainActivity.this, UserActivityEditorActivity.class);
+                intent.putExtra(INTENT_KEY_CURRENT_LOCATION, mService.getCurrentLocation());
                 startActivityForResult(intent, ACTIVITY_EDITOR_RESULT_REQUEST_CODE);
             }
         });
@@ -303,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        switch(requestCode){
+        switch (requestCode) {
             case PERMISSIONS_REQUEST_CODE:
                 if (grantResults.length <= 0) {
                     // If user interaction was interrupted, the permission request is cancelled and
@@ -312,9 +276,10 @@ public class MainActivity extends AppCompatActivity {
                 } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.i(TAG, "Permission granted.");
                     //startLocationUpdates();
-                    bindService(new Intent(this, LocationService.class), mServiceConnection,
-                            Context.BIND_AUTO_CREATE);
+                    //bindService(new Intent(this, LocationService.class), mServiceConnection,
+                    //        Context.BIND_AUTO_CREATE);
                     //mService.requestLocationUpdates();
+                    startService(new Intent(this, LocationService.class));
                 } else {
                     // TODO: Handle permission denied case.
                     // Permission denied.
@@ -322,15 +287,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Permission denied.", Toast.LENGTH_LONG).show();
                 }
                 break;
-            default:
-                break;
         }
-    }
-
-    //TODO ==== To be removed ======================================================================
-    public void incrementNumOfStoredActivities() {
-        numOfSavedActivities++;
-        mStorageStatTextView.setText("Number of activities recorded: " + numOfSavedActivities);
     }
 
 }

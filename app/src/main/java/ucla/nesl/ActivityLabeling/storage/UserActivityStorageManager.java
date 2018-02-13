@@ -13,14 +13,16 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import ucla.nesl.ActivityLabeling.R;
 
 
 /**
  * Created by zxxia on 12/18/17.
- * Manage log storage
+ *
+ * Provide interface to
+ *   - read/write user activities through database, and dump to a csv format
+ *   - read/write user activity and micro location labels into files
  */
 
 public class UserActivityStorageManager {
@@ -33,7 +35,6 @@ public class UserActivityStorageManager {
 
     private UserActivityDatabase db;
 
-    private Context mContext;
     private File storageDir;
 
     private int numStoredOfActivities = 0;
@@ -42,7 +43,6 @@ public class UserActivityStorageManager {
     private ArrayList<String> defaultActivityLabels;
 
     public UserActivityStorageManager(Context context) {
-        mContext = context;
         db = UserActivityDatabase.getAppDatabase(context);
 
         // file system check
@@ -51,7 +51,7 @@ public class UserActivityStorageManager {
             throw new IllegalStateException("Cannot access external storage");
         }
 
-        String appName = mContext.getString(R.string.app_name);
+        String appName = context.getString(R.string.app_name);
         storageDir = new File(Environment.getExternalStorageDirectory(), appName);
         if (!storageDir.exists()) {
             boolean success = storageDir.mkdirs();
@@ -67,94 +67,25 @@ public class UserActivityStorageManager {
                 context.getResources().getStringArray(R.array.activityTypes_array)));
     }
 
-    public int getNumberOfStoredActivities() {
-        return numStoredOfActivities;
-    }
-
-    public void saveOneActivity(UserActivity actInfo) {
-        if (!actInfo.isStopped()) {
-            // Activity is not stopped yet.
-            return;
-        }
-
-        String string = actInfo.toCSVLine();
-
-        Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
-
-        File file = new File(storageDir, usrActLog);
-
-        FileOutputStream stream;
-        try{
-            stream = new FileOutputStream(file, true);
-            stream.write(string.getBytes());
-            stream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void saveOngoingActivities(List<UserActivity> actsList) {
-
-        Log.i(TAG, Environment.getExternalStorageDirectory().getAbsolutePath());
-        File file = new File(storageDir, usrOngoingActLog);
-        FileOutputStream outputStream;
-        try{
-            outputStream = new FileOutputStream(file, false);
-
-            for (int i = 0; i < actsList.size(); i++) {
-                UserActivity actInfo = actsList.get(i);
-                if (!actInfo.isStopped()) {
-
-                    String string = actInfo.toCSVLine();
-                    outputStream.write(string.getBytes());
-                }
-            }
-
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public ArrayList<UserActivity> getActivityLogs() {
-        /*ArrayList<UserActivity> resultList  = new ArrayList<>();
-        if (isExternalStorageWritable()) {
-
-            File file = new File(getStorageDir(mContext.getString(R.string.app_name)), usrActLog);
-            try {
-                BufferedReader br = new BufferedReader(new FileReader(file));
-                String csvLine;
-                long oneDayAgo = Calendar.getInstance().getTime().getTime() - TimeUnit.DAYS.toMillis(1);
-                while ((csvLine = br.readLine()) != null) {
-                    numStoredOfActivities++;
-                    UserActivity actInfo = UserActivity.parseCSVLine(csvLine);
-                    if (actInfo.endTimeMs > oneDayAgo) {
-                        resultList.add(actInfo);
-                    }
-                }
-                br.close();
-            }
-            catch (IOException e) {
-                //TODO You'll need to add proper error handling here
-            }
-
-            file = new File(getStorageDir(mContext.getString(R.string.app_name)), usrOngoingActLog);
-            try {
-                BufferedReader br = new BufferedReader(new FileReader(file));
-                String csvLine;
-                while ((csvLine = br.readLine()) != null) {
-                    resultList.add(UserActivity.parseCSVLine(csvLine));
-                }
-                br.close();
-            }
-            catch (IOException e) {
-                //You'll need to add proper error handling here
-            }
-        }
-        return resultList;*/
+    /**
+     * Returns ongoing user activities (recent one shows first), then finished user activities
+     * within the past 24 hours (recent one shows first)
+     */
+    public ArrayList<UserActivity> getRecentActivities() {
         return new ArrayList(db.getOnGoingAndPast24HoursUserActivitiesLatestFirst());
     }
 
+    public int getNumTotalUserActivities() {
+        return db.getNumTotalUserActivities();
+    }
+
+    public void addNewUserActivity(UserActivity activity) {
+        db.createUserActivity(activity);
+    }
+
+    public void updateUserActivity(UserActivity activity) {
+        db.updateUserActivity(activity);
+    }
 
 
     // ==== Activity and location labels ===========================================================

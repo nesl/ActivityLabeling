@@ -23,8 +23,11 @@ public abstract class UserActivityDatabase extends RoomDatabase {
 
     public static UserActivityDatabase getAppDatabase(Context context) {
         if (INSTANCE == null) {
-            INSTANCE =
-                    Room.databaseBuilder(context.getApplicationContext(), UserActivityDatabase.class, "user-activity-database")
+            // Since the database scale of this app will be small, we do the computation on the
+            // main thread to simplify the development process. The impact of the app fluency should
+            // be negligible.
+            INSTANCE = Room.databaseBuilder(context, UserActivityDatabase.class, "user-activity-database")
+                            .allowMainThreadQueries()
                             .build();
         }
         return INSTANCE;
@@ -52,5 +55,9 @@ public abstract class UserActivityDatabase extends RoomDatabase {
 
     public void updateUserActivity(UserActivity activity) {
         getDao().update(activity);
+    }
+
+    public int getNumTotalUserActivities() {
+        return getDao().countAll();
     }
 }

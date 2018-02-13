@@ -23,18 +23,17 @@ import ucla.nesl.ActivityLabeling.utils.Utils;
  */
 
 public class UserActivityListAdapter extends BaseAdapter {
-    private MainActivity mMainActivity;
     private List<UserActivity> mList;
     private LayoutInflater mInflater;
     private UserActivityStorageManager mStore;
 
     private LocationService mService;
 
-    UserActivityListAdapter(MainActivity activity, List<UserActivity> actsList, UserActivityStorageManager actStoreMngr, LocationService service) {
-        mMainActivity = activity;
+    UserActivityListAdapter(MainActivity activity, List<UserActivity> actsList,
+                            UserActivityStorageManager actStoreMngr, LocationService service) {
         mList = actsList;
 
-        mInflater = (LayoutInflater)mMainActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mStore = actStoreMngr;
         mService = service;
     }
@@ -74,7 +73,7 @@ public class UserActivityListAdapter extends BaseAdapter {
         final TextView typeTV = rowView.findViewById(R.id.typeTV);
         final TextView dscrpTV = rowView.findViewById(R.id.dscrpTV);
 
-        final UserActivity actInfo = (UserActivity) getItem(position);
+        final UserActivity actInfo = getItem(position);
 
 
         startTV.setText(Utils.timeToString(actInfo.startTimeMs));
@@ -100,31 +99,36 @@ public class UserActivityListAdapter extends BaseAdapter {
 
 
         final Button stopBtn = rowView.findViewById(R.id.stopBtn);
+
         if (actInfo.isStopped()) {
+            // Hide the stop button if the user activity is done
             stopBtn.setEnabled(false);
             stopBtn.setVisibility(View.GONE);
         }
-        stopBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!actInfo.isStopped()) {
+        else {
+            // provide the action when the stop button is clicked
+            stopBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // update ambient attributes of the user activity
                     actInfo.endTimeMs = Calendar.getInstance().getTime().getTime();
-                    endTV.setText(Utils.timeToString(actInfo.endTimeMs));
-
                     actInfo.setEndLocation(mService.getCurrentLocation());
-                    endLocTV.setText(Utils.locToString(actInfo.endLatitude, actInfo.endLongitude));
 
                     chronometer.stop();
                     long elapsedRealtimeOffset = actInfo.endTimeMs - SystemClock.elapsedRealtime();
                     chronometer.setBase(actInfo.startTimeMs - elapsedRealtimeOffset);
 
-                    mStore.saveOneActivity(actInfo);
+                    // update UI
+                    endTV.setText(Utils.timeToString(actInfo.endTimeMs));
+                    endLocTV.setText(Utils.locToString(actInfo.endLatitude, actInfo.endLongitude));
                     stopBtn.setEnabled(false);
                     stopBtn.setVisibility(View.GONE);
-                    mMainActivity.incrementNumOfStoredActivities();
+
+                    // synchronize with the persistent storage
+                    mStore.updateUserActivity(actInfo);
                 }
-            }
-        });
+            });
+        }
 
         return rowView;
     }
