@@ -12,7 +12,7 @@ import java.util.HashMap;
 
 public class EditTextMonitor {
 
-    private HashMap<EditText, Double> editTextValues;
+    private HashMap<EditText, Double> editTextValues = new HashMap<>();
     private int errorCnts = 0;
 
     public void registerEditText(EditText text, double minVal, double maxVal, String errorMessage) {

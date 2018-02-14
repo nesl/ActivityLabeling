@@ -57,9 +57,9 @@
     <string name="cancel">Cancel</string>
     <string name="notification">Notification</string>
     <string name="location_update_settings">Location Update Settings</string>
-    <string name="update_interval_s">Update Interval(ms)</string>
-    <string name="minimum_displacement_m">Minimum Displacement(m)</string>
+    <string name="update_interval_s">Update Interval (sec)</string>
+    <string name="minimum_displacement_m">Minimum Displacement (m)</string>
     <string name="activity_detection_settings">Activity Detection Settings</string>
-    <string name="detection_interval_s">Detection Interval(ms)</string>
+    <string name="detection_interval_s">Detection Interval (sec)</string>
 
 </resources>

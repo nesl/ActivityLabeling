@@ -236,7 +236,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
     private void createLocationRequest() {
         mLocationRequest = new LocationRequest();
 
-        mLocationRequest.setInterval(preferenceHelper.getLocationUpdateInterval());
+        mLocationRequest.setInterval(preferenceHelper.getLocationUpdateIntervalMsec());
 
         // Sets the fastest rate for active location updates. This interval is exact, and your
         // application will never receive updates faster than this value.
@@ -244,7 +244,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         //mLocationRequest.setFastestInterval(fastestInterval);
 
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setSmallestDisplacement(preferenceHelper.getLocationMinimumDisplacement());
+        mLocationRequest.setSmallestDisplacement(preferenceHelper.getLocationMinimumDisplacementMeter());
     }
 
     /**

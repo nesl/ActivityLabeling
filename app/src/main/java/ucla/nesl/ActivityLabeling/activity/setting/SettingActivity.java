@@ -43,11 +43,16 @@ public class SettingActivity extends AppCompatActivity {
         // Provide Widget content
         preferenceHelper = new SharedPreferenceHelper(this);
 
-        locUpdateIntervalET.setText(String.valueOf(preferenceHelper.getLocationUpdateInterval()));
-        locMinDisplacementET.setText(String.valueOf(preferenceHelper.getLocationMinimumDisplacement()));
-        locNotificationSW.setChecked(preferenceHelper.getSendingNotificationOnLocationChanged());
-        actDetectionIntervalET.setText(String.valueOf(preferenceHelper.getActivityDetetionInterval()));
-        actNotificationSW.setChecked(preferenceHelper.getSendingNotificationOnMotionChanged());
+        locUpdateIntervalET.setText(
+                String.valueOf(preferenceHelper.getLocationUpdateIntervalMsec() / 1000.));
+        locMinDisplacementET.setText(
+                String.valueOf(preferenceHelper.getLocationMinimumDisplacementMeter()));
+        locNotificationSW.setChecked(
+                preferenceHelper.getSendingNotificationOnLocationChanged());
+        actDetectionIntervalET.setText(
+                String.valueOf(preferenceHelper.getActivityDetetionIntervalMsec() / 1000.));
+        actNotificationSW.setChecked(
+                preferenceHelper.getSendingNotificationOnMotionChanged());
 
         // Attach on-change event listeners to all EditTexts
         editMonitor = new EditTextMonitor();
@@ -67,13 +72,13 @@ public class SettingActivity extends AppCompatActivity {
                     return;
                 }
 
-                preferenceHelper.setLocationUpdateInterval(
+                preferenceHelper.setLocationUpdateIntervalMsec(
                         (long)(editMonitor.getEditTextValue(locUpdateIntervalET) * 1000.));
-                preferenceHelper.setLocationMinimumDisplacement(
+                preferenceHelper.setLocationMinimumDisplacementMeter(
                         (float) editMonitor.getEditTextValue(locMinDisplacementET));
                 preferenceHelper.setSendingNotificationOnLocationChanged(
                         locNotificationSW.isChecked());
-                preferenceHelper.setActivityDetectionInterval(
+                preferenceHelper.setActivityDetectionIntervalMsec(
                         (long)(editMonitor.getEditTextValue(actDetectionIntervalET) * 1000.));
                 preferenceHelper.getSendingNotificationOnMotionChanged(
                         actNotificationSW.isChecked());

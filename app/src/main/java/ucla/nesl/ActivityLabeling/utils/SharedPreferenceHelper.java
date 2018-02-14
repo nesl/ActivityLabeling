@@ -42,19 +42,19 @@ public class SharedPreferenceHelper {
         mSharedPreferences.edit().putBoolean(KEY_SENDING_NOTIFICATION_ON_LOCATION_CHANGED, value).apply();
     }
 
-    public long getLocationUpdateInterval() {
+    public long getLocationUpdateIntervalMsec() {
         return mSharedPreferences.getLong(KEY_LOCATION_UPDATE_INTERVAL, 60000L);
     }
 
-    public void setLocationUpdateInterval(long value) {
+    public void setLocationUpdateIntervalMsec(long value) {
         mSharedPreferences.edit().putLong(KEY_LOCATION_UPDATE_INTERVAL, value).apply();
     }
 
-    public float getLocationMinimumDisplacement() {
+    public float getLocationMinimumDisplacementMeter() {
         return mSharedPreferences.getFloat(KEY_LOCATION_MINIMUM_DISPLACEMENT, 50.f);
     }
 
-    public void setLocationMinimumDisplacement(float value) {
+    public void setLocationMinimumDisplacementMeter(float value) {
         mSharedPreferences.edit().putFloat(KEY_LOCATION_MINIMUM_DISPLACEMENT, value).apply();
     }
 
@@ -66,11 +66,11 @@ public class SharedPreferenceHelper {
         mSharedPreferences.edit().putBoolean(KEY_SENDING_NOTIFICATION_ON_MOTION_CHANGED, value).apply();
     }
 
-    public long getActivityDetetionInterval() {
+    public long getActivityDetetionIntervalMsec() {
         return mSharedPreferences.getLong(KEY_ACTIVITY_DETECTION_INTERVAL, 60000L);
     }
 
-    public void setActivityDetectionInterval(long value) {
+    public void setActivityDetectionIntervalMsec(long value) {
         mSharedPreferences.edit().putLong(KEY_ACTIVITY_DETECTION_INTERVAL, value).apply();
     }
 
