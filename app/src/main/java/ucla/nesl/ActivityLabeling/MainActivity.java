@@ -26,6 +26,7 @@ import java.util.ArrayList;
 
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
+import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,14 +50,17 @@ public class MainActivity extends AppCompatActivity {
     };
 
     // UI Widgets.
-    private ListView mActivitiesListView;
-    private FloatingActionButton mAddActivityFab;
-    private TextView mStorageStatTextView;
-    private Button mStartLocationUpdateButton;
-    private Button mStopLocationUpdateButton;
+    private ListView userActivitiyListView;
+    private TextView userActivityCountTextView;
+    private Button startDataCollectionButton;
+    private Button stopDataCollectionButton;
+    private FloatingActionButton addUserActivityFab;
 
     // UI helper
     private UserActivityListAdapter mActivityListAdapter;
+
+    // Application properties/preferences
+    private SharedPreferenceHelper preferenceHelper;
 
     // A reference to the service used to get location updates.
     private SensorDataProcessingService mService = null;
@@ -67,6 +71,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<UserActivity> actsList;
 
 
+    //region Section: Activity life cycle
+    // =============================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "OnCreate");
@@ -76,18 +82,21 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         // Locate the UI widgets.
-        mActivitiesListView = findViewById(R.id.ActivitiesListView);
-        mAddActivityFab = findViewById(R.id.fab);
-        mStorageStatTextView = findViewById(R.id.StorageStatsTextView);
-        mStartLocationUpdateButton = findViewById(R.id.StartLocationUpdateBtn);
-        mStopLocationUpdateButton = findViewById(R.id.StopLocationUpdateBtn);
+        userActivitiyListView = findViewById(R.id.ActivitiesListView);
+        addUserActivityFab = findViewById(R.id.fab);
+        userActivityCountTextView = findViewById(R.id.StorageStatsTextView);
+        startDataCollectionButton = findViewById(R.id.StartLocationUpdateBtn);
+        stopDataCollectionButton = findViewById(R.id.StopLocationUpdateBtn);
 
-        if (!checkPermissions()) {
-            requestPermissions();
-        }
+        startDataCollectionButton.setEnabled(false);
+        stopDataCollectionButton.setEnabled(false);
+
+        requestPermissions();
     }
+    //endregion
 
-    // ==== UI Option menu =========================================================================
+    //region Section: UI Option menu
+    // =============================================================================================
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -110,87 +119,30 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+    //endregion
 
-    // ==== Main procedure initialization ==========================================================
-    private void startProcedure() {
-        // Instantiate the UI widgets
-        mStoreManager = new UserActivityStorageManager(this);
-
-        //display saved records within 24 hours
-        actsList = mStoreManager.getRecentActivities();
-        numSavedActivities = mStoreManager.getNumTotalUserActivities();
-
-        mActivityListAdapter = new UserActivityListAdapter(this, actsList, mStoreManager, mService);
-        mActivitiesListView.setAdapter(mActivityListAdapter);
-        mAddActivityFab.setImageResource(R.drawable.plus_sign);
-
-        mStorageStatTextView.setText("Number of activities recorded: " + numSavedActivities);
-
-        attachButtonClickEventListeners();
-
-        startService(new Intent(this, SensorDataProcessingService.class));
-    }
-
-    // ==== Activity transition ====================================================================
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case ACTIVITY_EDITOR_RESULT_REQUEST_CODE:
-                if (resultCode == RESULT_OK) {
-                    Log.i(TAG, "Received results from EditorActivity");
-                    UserActivity newActivity = data.getParcelableExtra(UserActivityEditorActivity.ACTIVITY_INFO);
-                    actsList.add(newActivity);
-                    mActivityListAdapter.notifyDataSetChanged();
-
-                    numSavedActivities++;
-                    mStorageStatTextView.setText("Number of activities recorded: " + numSavedActivities);
-                }
-                break;
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    // ==== Service connection =====================================================================
-    //TODO: need to re-examine the service connection object
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.i(TAG, "onServiceConnected");
-            SensorDataProcessingService.LocalBinder binder = (SensorDataProcessingService.LocalBinder) service;
-            mService = binder.getService();
-            mActivityListAdapter.updateService(mService);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mService = null;
-        }
-    };
-
-    // ==== Button event registration and behavior definition ======================================
+    //region Section: Button event registration and behavior definition
+    // =============================================================================================
     private void attachButtonClickEventListeners() {
-        mStartLocationUpdateButton.setOnClickListener(new View.OnClickListener() {
+        startDataCollectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (checkPermissions()) {
-                    mService.requestLocationUpdates();
-                    mService.sendActivityUpdatesRequest();
-                } else {
-                    requestPermissions();
-                }
+                //mService.requestLocationUpdates();
+                //mService.sendActivityUpdatesRequest();
+                startDataCollection();
             }
         });
 
-        mStopLocationUpdateButton.setOnClickListener(new View.OnClickListener() {
+        stopDataCollectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mService.removeLocationUpdates();
-                mService.removeActivityUpdates();
+                //mService.removeLocationUpdates();
+                //mService.removeActivityUpdates();
+                stopDataCollection();
             }
         });
 
-        mAddActivityFab.setOnClickListener(new View.OnClickListener() {
+        addUserActivityFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Log.i(TAG, "Create a new activity log");
@@ -201,18 +153,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    //TODO: not properly use this method
-    private void setButtonsState(boolean requestingLocationUpdates) {
-        if (requestingLocationUpdates) {
-            mStartLocationUpdateButton.setEnabled(false);
-            mStopLocationUpdateButton.setEnabled(true);
+    private void setDataCollectionButtonState(boolean isCollectingData) {
+        if (isCollectingData) {
+            startDataCollectionButton.setEnabled(false);
+            stopDataCollectionButton.setEnabled(true);
+            Log.d(TAG, "came here: collecting");
         } else {
-            mStartLocationUpdateButton.setEnabled(true);
-            mStopLocationUpdateButton.setEnabled(false);
+            startDataCollectionButton.setEnabled(true);
+            stopDataCollectionButton.setEnabled(false);
+            Log.d(TAG, "came here: not collecting");
         }
     }
+    //endregion
 
-    // ==== Permission related =====================================================================
+    //region Section: Permission related
+    // =============================================================================================
     private boolean checkPermissions() {
         for (String permission : requiredPermissions) {
             if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)
@@ -246,10 +201,87 @@ public class MainActivity extends AppCompatActivity {
                     //bindService(new Intent(this, LocationService.class), mServiceConnection,
                     //        Context.BIND_AUTO_CREATE);
                     //mService.requestLocationUpdates();
-                    startProcedure();
+                    enterMainProcedure();
                 }
                 break;
         }
     }
+    //endregion
 
+    //region Section: Main procedure initialization and data collection flow control
+    // =============================================================================================
+    private void enterMainProcedure() {
+        mStoreManager = new UserActivityStorageManager(this);
+        preferenceHelper = new SharedPreferenceHelper(this);
+
+        // Display on-going user activities or activities within 24 hours
+        actsList = mStoreManager.getRecentUserActivities();
+        numSavedActivities = mStoreManager.getNumTotalUserActivities();
+
+        mActivityListAdapter = new UserActivityListAdapter(this, actsList, mStoreManager, mService);
+        userActivitiyListView.setAdapter(mActivityListAdapter);
+        addUserActivityFab.setImageResource(R.drawable.plus_sign);
+
+        userActivityCountTextView.setText("Number of activities recorded: " + numSavedActivities);
+
+        attachButtonClickEventListeners();
+
+        boolean canCollectData = preferenceHelper.getCanCollectUserData();
+        if (canCollectData) {
+            startDataCollection();
+        }
+        setDataCollectionButtonState(canCollectData);
+    }
+
+    private void startDataCollection() {
+        startService(new Intent(this, SensorDataProcessingService.class));
+        setDataCollectionButtonState(true);
+    }
+
+    private void stopDataCollection() {
+        stopService(new Intent(this, SensorDataProcessingService.class));
+        setDataCollectionButtonState(false);
+    }
+    //endregion
+
+    //region Section: Activity transitions
+    // =============================================================================================
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case ACTIVITY_EDITOR_RESULT_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    Log.i(TAG, "Received results from EditorActivity");
+                    UserActivity newActivity = data.getParcelableExtra(UserActivityEditorActivity.ACTIVITY_INFO);
+                    actsList.add(newActivity);
+                    mActivityListAdapter.notifyDataSetChanged();
+
+                    numSavedActivities++;
+                    userActivityCountTextView.setText("Number of activities recorded: " + numSavedActivities);
+                }
+                break;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+    //endregion
+
+    //region Section: Service connection
+    // =============================================================================================
+    //TODO: need to re-examine the service connection object
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.i(TAG, "onServiceConnected");
+            SensorDataProcessingService.LocalBinder binder = (SensorDataProcessingService.LocalBinder) service;
+            mService = binder.getService();
+            mActivityListAdapter.updateService(mService);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mService = null;
+        }
+    };
+    //endregion
 }

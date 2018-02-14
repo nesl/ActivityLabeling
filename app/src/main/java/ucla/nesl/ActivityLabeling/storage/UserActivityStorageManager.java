@@ -71,7 +71,7 @@ public class UserActivityStorageManager {
      * Returns ongoing user activities (recent one shows first), then finished user activities
      * within the past 24 hours (recent one shows first)
      */
-    public ArrayList<UserActivity> getRecentActivities() {
+    public ArrayList<UserActivity> getRecentUserActivities() {
         return new ArrayList(db.getOnGoingAndPast24HoursUserActivitiesLatestFirst());
     }
 

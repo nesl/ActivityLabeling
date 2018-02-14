@@ -12,6 +12,7 @@ import android.preference.PreferenceManager;
 
 public class SharedPreferenceHelper {
     //TODO: make the scope of the following keys private
+    public static final String KEY_CAN_COLLECT_USER_DATA = "can_collect_data";
     public static final String KEY_SENDING_NOTIFICATION_ON_LOCATION_CHANGED = "notification_location_changed";
     public static final String KEY_LOCATION_UPDATE_INTERVAL = "location_update_interval";
     public static final String KEY_LOCATION_MINIMUM_DISPLACEMENT = "location_minimum_displacement";
@@ -23,6 +24,14 @@ public class SharedPreferenceHelper {
 
     public SharedPreferenceHelper(Context context) {
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
+    }
+
+    public boolean getCanCollectUserData() {
+        return mSharedPreferences.getBoolean(KEY_CAN_COLLECT_USER_DATA, true);
+    }
+
+    public void setCanCollectUserData(boolean value) {
+        mSharedPreferences.edit().putBoolean(KEY_CAN_COLLECT_USER_DATA, value).apply();
     }
 
     public boolean getSendingNotificationOnLocationChanged() {
