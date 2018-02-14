@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import ucla.nesl.ActivityLabeling.activity.main.MainActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
 import ucla.nesl.ActivityLabeling.utils.Utils;
@@ -26,7 +27,8 @@ import ucla.nesl.ActivityLabeling.utils.Utils;
 public class UserActivityEditorActivity extends AppCompatActivity {
 
     private static final String TAG = UserActivityEditorActivity.class.getSimpleName();
-    static final String ACTIVITY_INFO = "Activity Info";
+
+    public static final String ACTIVITY_INFO = "Activity_Info";
 
     /**
      * Keys for storing activity state in the Bundle.

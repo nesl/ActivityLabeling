@@ -277,7 +277,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
 
 
     public class LocalBinder extends Binder {
-        SensorDataProcessingService getService() {
+        public SensorDataProcessingService getService() {
             return SensorDataProcessingService.this;
         }
     }

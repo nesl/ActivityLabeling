@@ -11,7 +11,7 @@ import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.SparseArray;
 
-import ucla.nesl.ActivityLabeling.MainActivity;
+import ucla.nesl.ActivityLabeling.activity.main.MainActivity;
 import ucla.nesl.ActivityLabeling.R;
 
 /**

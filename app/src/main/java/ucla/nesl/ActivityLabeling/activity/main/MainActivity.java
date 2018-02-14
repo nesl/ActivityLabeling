@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.activity.main;
 
 
 import android.Manifest;
@@ -25,6 +25,9 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import ucla.nesl.ActivityLabeling.R;
+import ucla.nesl.ActivityLabeling.SettingActivity;
+import ucla.nesl.ActivityLabeling.UserActivityEditorActivity;
 import ucla.nesl.ActivityLabeling.service.sensordataprocessing.SensorDataProcessingService;
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
