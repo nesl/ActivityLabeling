@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.notification;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.SparseArray;
+
+import ucla.nesl.ActivityLabeling.MainActivity;
+import ucla.nesl.ActivityLabeling.R;
 
 /**
  * Created by timestring on 2/12/18.

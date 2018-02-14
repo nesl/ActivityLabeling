@@ -3,6 +3,7 @@ package ucla.nesl.ActivityLabeling;
 
 import android.Manifest;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -157,11 +158,9 @@ public class MainActivity extends AppCompatActivity {
         if (isCollectingData) {
             startDataCollectionButton.setEnabled(false);
             stopDataCollectionButton.setEnabled(true);
-            Log.d(TAG, "came here: collecting");
         } else {
             startDataCollectionButton.setEnabled(true);
             stopDataCollectionButton.setEnabled(false);
-            Log.d(TAG, "came here: not collecting");
         }
     }
     //endregion
@@ -234,7 +233,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startDataCollection() {
-        startService(new Intent(this, SensorDataProcessingService.class));
+        Intent intent = new Intent(this, SensorDataProcessingService.class);
+        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
         setDataCollectionButtonState(true);
     }
 
@@ -267,7 +267,6 @@ public class MainActivity extends AppCompatActivity {
 
     //region Section: Service connection
     // =============================================================================================
-    //TODO: need to re-examine the service connection object
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -281,6 +280,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             mService = null;
+            mActivityListAdapter.updateService(null);
         }
     };
     //endregion
