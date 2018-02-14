@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import ucla.nesl.ActivityLabeling.edittextmonitor.EditTextMonitor;
 import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
 
 public class SettingActivity extends AppCompatActivity {
@@ -21,6 +22,7 @@ public class SettingActivity extends AppCompatActivity {
     private Button saveBtn;
     private Button cancelBtn;
 
+    private EditTextMonitor editMonitor;
     private SharedPreferenceHelper preferenceHelper;
 
     @Override
@@ -28,7 +30,7 @@ public class SettingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
 
-        // Instantiate UI Widgets
+        // Acquire UI Widgets
         locUpdateIntervalET = findViewById(R.id.LocationUpdateIntervalEditText);
         locMinDisplacementET = findViewById(R.id.LocationMinimumDisplacementEditText);
         locNotificationSW = findViewById(R.id.LocationNotificationSwitch);
@@ -37,6 +39,7 @@ public class SettingActivity extends AppCompatActivity {
         saveBtn = findViewById(R.id.SettingsSaveBtn);
         cancelBtn = findViewById(R.id.SettingsCancelBtn);
 
+        // Provide Widget content
         preferenceHelper = new SharedPreferenceHelper(this);
 
         locUpdateIntervalET.setText(String.valueOf(preferenceHelper.getLocationUpdateInterval()));
@@ -45,22 +48,34 @@ public class SettingActivity extends AppCompatActivity {
         actDetectionIntervalET.setText(String.valueOf(preferenceHelper.getActivityDetetionInterval()));
         actNotificationSW.setChecked(preferenceHelper.getActivityChangeNotification());
 
+        // Attach on-change event listeners to all EditTexts
+        editMonitor = new EditTextMonitor();
+        editMonitor.registerEditText(locUpdateIntervalET, 0.001, Double.MAX_VALUE,
+                "Please enter a valid time interval");
+        editMonitor.registerEditText(locMinDisplacementET, 0., Double.MAX_VALUE,
+                "Please enter a valid distance");
+        editMonitor.registerEditText(actDetectionIntervalET, 0.001, Double.MAX_VALUE,
+                "Please enter a valid time interval");
+
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: let's do in-place check instead of checking in the very end.
-                long locUpdateInterval = stringToLong(locUpdateIntervalET);
-                long actUpdateInterval = stringToLong(actDetectionIntervalET);
-                float minDisplacement = stringToFloat(locMinDisplacementET);
-                if (locUpdateInterval < 0L || actUpdateInterval < 0L || minDisplacement < 0.f) {
+                if (!editMonitor.areAllEditTextValid()) {
+                    Toast.makeText(SettingActivity.this, "Please fix the errors",
+                            Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                preferenceHelper.setLocationUpdateInterval(locUpdateInterval);
-                preferenceHelper.setLocationMinimumDisplacement(minDisplacement);
-                preferenceHelper.setLocationChangeNotification(locNotificationSW.isChecked());
-                preferenceHelper.setActivityDetectionInterval(actUpdateInterval);
-                preferenceHelper.setActivityChangeNotification(actNotificationSW.isChecked());
+                preferenceHelper.setLocationUpdateInterval(
+                        (long)(editMonitor.getEditTextValue(locUpdateIntervalET) * 1000.));
+                preferenceHelper.setLocationMinimumDisplacement(
+                        (float) editMonitor.getEditTextValue(locMinDisplacementET));
+                preferenceHelper.setLocationChangeNotification(
+                        locNotificationSW.isChecked());
+                preferenceHelper.setActivityDetectionInterval(
+                        (long)(editMonitor.getEditTextValue(actDetectionIntervalET) * 1000.));
+                preferenceHelper.setActivityChangeNotification(
+                        actNotificationSW.isChecked());
 
                 finish();
             }
@@ -75,33 +90,4 @@ public class SettingActivity extends AppCompatActivity {
         });
     }
 
-    private long stringToLong(EditText editText) {
-        long result = -1;
-        try {
-            result = Long.valueOf(editText.getText().toString());
-        } catch (NumberFormatException ex) {
-            String str = "";
-            if(editText == locUpdateIntervalET) {
-                str = "Location Update Interval";
-            } else if (editText == actDetectionIntervalET) {
-                str = "Activity Detection Interval";
-            }
-            Toast.makeText(getApplicationContext(), "Invalid number format for " + str, Toast.LENGTH_LONG).show();
-        }
-        return result;
-    }
-
-    private float stringToFloat(EditText editText) {
-        float result = -1;
-        try {
-            result = Float.valueOf(editText.getText().toString());
-        } catch (NumberFormatException ex) {
-            String str = "";
-            if(editText == locMinDisplacementET) {
-                str = "Location Minimum Displacement";
-                Toast.makeText(getApplicationContext(), "Invalid number format for " + str, Toast.LENGTH_LONG).show();
-            }
-        }
-        return result;
-    }
 }
