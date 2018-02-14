@@ -25,6 +25,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import ucla.nesl.ActivityLabeling.service.sensordataprocessing.SensorDataProcessingService;
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
 import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;

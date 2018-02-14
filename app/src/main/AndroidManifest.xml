@@ -44,11 +44,11 @@
         </activity>
 
         <service
-            android:name=".SensorDataProcessingService"
+            android:name=".service.sensordataprocessing.SensorDataProcessingService"
             android:enabled="true"
             android:exported="true" />
         <service
-            android:name=".DetectedActivitiesIntentService"
+            android:name=".service.sensordataprocessing.DetectedActivitiesIntentService"
             android:enabled="true"
             android:exported="true" />
 

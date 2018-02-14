@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.service.sensordataprocessing;
 
 import android.app.IntentService;
 import android.content.Intent;
