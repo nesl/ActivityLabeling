@@ -82,21 +82,6 @@ public class MainActivity extends AppCompatActivity {
         mStartLocationUpdateButton = findViewById(R.id.StartLocationUpdateBtn);
         mStopLocationUpdateButton = findViewById(R.id.StopLocationUpdateBtn);
 
-        // Instantiate the UI widgets
-        mStoreManager = new UserActivityStorageManager(this);
-
-        //display saved records within 24 hours
-        actsList = mStoreManager.getRecentActivities();
-        numSavedActivities = mStoreManager.getNumTotalUserActivities();
-
-        mActivityListAdapter = new UserActivityListAdapter(this, actsList, mStoreManager, mService);
-        mActivitiesListView.setAdapter(mActivityListAdapter);
-        mAddActivityFab.setImageResource(R.drawable.plus_sign);
-
-        mStorageStatTextView.setText("Number of activities recorded: " + numSavedActivities);
-
-        attachButtonClickEventListeners();
-
         if (!checkPermissions()) {
             requestPermissions();
         }
@@ -124,6 +109,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    // ==== Main procedure initialization ==========================================================
+    private void startProcedure() {
+        // Instantiate the UI widgets
+        mStoreManager = new UserActivityStorageManager(this);
+
+        //display saved records within 24 hours
+        actsList = mStoreManager.getRecentActivities();
+        numSavedActivities = mStoreManager.getNumTotalUserActivities();
+
+        mActivityListAdapter = new UserActivityListAdapter(this, actsList, mStoreManager, mService);
+        mActivitiesListView.setAdapter(mActivityListAdapter);
+        mAddActivityFab.setImageResource(R.drawable.plus_sign);
+
+        mStorageStatTextView.setText("Number of activities recorded: " + numSavedActivities);
+
+        attachButtonClickEventListeners();
+
+        startService(new Intent(this, LocationService.class));
     }
 
     // ==== Activity transition ====================================================================
@@ -227,20 +232,21 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case PERMISSIONS_REQUEST_CODE:
                 if (grantResults.length <= 0) {
-                    // If user interaction was interrupted, the permission request is cancelled and
-                    // receive empty arrays.
+                    // The user interaction was interrupted because the permission request is
+                    // cancelled
                     Log.i(TAG, "User interaction was cancelled.");
-                } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                } else if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    // Permission denied.
+                    Log.i(TAG, "Permission denied.");
+                    Toast.makeText(this, "Permission denied.", Toast.LENGTH_LONG).show();
                     Log.i(TAG, "Permission granted.");
+
+                } else {
                     //startLocationUpdates();
                     //bindService(new Intent(this, LocationService.class), mServiceConnection,
                     //        Context.BIND_AUTO_CREATE);
                     //mService.requestLocationUpdates();
-                    startService(new Intent(this, LocationService.class));
-                } else {
-                    // Permission denied.
-                    Log.i(TAG, "Permission denied.");
-                    Toast.makeText(this, "Permission denied.", Toast.LENGTH_LONG).show();
+                    startProcedure();
                 }
                 break;
         }

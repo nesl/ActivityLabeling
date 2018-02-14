@@ -101,22 +101,25 @@ public class LocationService extends Service implements SharedPreferences.OnShar
         super.onCreate();
         Log.i(TAG, "onCreate");
 
+        // Acquire application properties
+        preferenceHelper = new SharedPreferenceHelper(this);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Initialize location data source
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        createLocationRequest();
-
 
         HandlerThread handlerThread = new HandlerThread(TAG);
         handlerThread.start();
         mServiceHandler = new Handler(handlerThread.getLooper());
 
-        notificationHelper = new NotificationHelper(this);
+        createLocationRequest();
 
+        // Initialize motion activity data source
         mActivityRecognitionClient = new ActivityRecognitionClient(this);
         mReceiver = new DetectedActivityReceiver();
 
-        preferenceHelper = new SharedPreferenceHelper(this);
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        // Set up notification tasks
+        notificationHelper = new NotificationHelper(this);
     }
 
     @Override
