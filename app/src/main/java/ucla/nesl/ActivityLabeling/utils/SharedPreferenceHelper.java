@@ -12,24 +12,25 @@ import android.preference.PreferenceManager;
 
 public class SharedPreferenceHelper {
     //TODO: make the scope of the following keys private
-    public static final String KEY_LOCATION_CHANGE_NOTIFICATION = "location_change_notification";
+    public static final String KEY_SENDING_NOTIFICATION_ON_LOCATION_CHANGED = "notification_location_changed";
     public static final String KEY_LOCATION_UPDATE_INTERVAL = "location_update_interval";
     public static final String KEY_LOCATION_MINIMUM_DISPLACEMENT = "location_minimum_displacement";
+    public static final String KEY_SENDING_NOTIFICATION_ON_MOTION_CHANGED = "notification_motion_changed";
     public static final String KEY_ACTIVITY_DETECTION_INTERVAL = "activity_detection_interval";
-    public static final String KEY_ACTIVITY_CHANGE_NOTIFICATION = "activity_change_notification";
 
     private SharedPreferences mSharedPreferences;
+
 
     public SharedPreferenceHelper(Context context) {
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
-    public boolean getLocationChangeNotification() {
-        return mSharedPreferences.getBoolean(KEY_LOCATION_CHANGE_NOTIFICATION, false);
+    public boolean getSendingNotificationOnLocationChanged() {
+        return mSharedPreferences.getBoolean(KEY_SENDING_NOTIFICATION_ON_LOCATION_CHANGED, false);
     }
 
-    public void setLocationChangeNotification(boolean value) {
-        mSharedPreferences.edit().putBoolean(KEY_LOCATION_CHANGE_NOTIFICATION, value).apply();
+    public void setSendingNotificationOnLocationChanged(boolean value) {
+        mSharedPreferences.edit().putBoolean(KEY_SENDING_NOTIFICATION_ON_LOCATION_CHANGED, value).apply();
     }
 
     public long getLocationUpdateInterval() {
@@ -48,6 +49,14 @@ public class SharedPreferenceHelper {
         mSharedPreferences.edit().putFloat(KEY_LOCATION_MINIMUM_DISPLACEMENT, value).apply();
     }
 
+    public boolean getSendingNotificationOnMotionChanged() {
+        return mSharedPreferences.getBoolean(KEY_SENDING_NOTIFICATION_ON_MOTION_CHANGED, false);
+    }
+
+    public void getSendingNotificationOnMotionChanged(boolean value) {
+        mSharedPreferences.edit().putBoolean(KEY_SENDING_NOTIFICATION_ON_MOTION_CHANGED, value).apply();
+    }
+
     public long getActivityDetetionInterval() {
         return mSharedPreferences.getLong(KEY_ACTIVITY_DETECTION_INTERVAL, 60000L);
     }
@@ -56,11 +65,4 @@ public class SharedPreferenceHelper {
         mSharedPreferences.edit().putLong(KEY_ACTIVITY_DETECTION_INTERVAL, value).apply();
     }
 
-    public boolean getActivityChangeNotification() {
-        return mSharedPreferences.getBoolean(KEY_ACTIVITY_CHANGE_NOTIFICATION, false);
-    }
-
-    public void setActivityChangeNotification(boolean value) {
-        mSharedPreferences.edit().putBoolean(KEY_ACTIVITY_CHANGE_NOTIFICATION, value).apply();
-    }
 }

@@ -44,9 +44,9 @@ public class SettingActivity extends AppCompatActivity {
 
         locUpdateIntervalET.setText(String.valueOf(preferenceHelper.getLocationUpdateInterval()));
         locMinDisplacementET.setText(String.valueOf(preferenceHelper.getLocationMinimumDisplacement()));
-        locNotificationSW.setChecked(preferenceHelper.getLocationChangeNotification());
+        locNotificationSW.setChecked(preferenceHelper.getSendingNotificationOnLocationChanged());
         actDetectionIntervalET.setText(String.valueOf(preferenceHelper.getActivityDetetionInterval()));
-        actNotificationSW.setChecked(preferenceHelper.getActivityChangeNotification());
+        actNotificationSW.setChecked(preferenceHelper.getSendingNotificationOnMotionChanged());
 
         // Attach on-change event listeners to all EditTexts
         editMonitor = new EditTextMonitor();
@@ -70,11 +70,11 @@ public class SettingActivity extends AppCompatActivity {
                         (long)(editMonitor.getEditTextValue(locUpdateIntervalET) * 1000.));
                 preferenceHelper.setLocationMinimumDisplacement(
                         (float) editMonitor.getEditTextValue(locMinDisplacementET));
-                preferenceHelper.setLocationChangeNotification(
+                preferenceHelper.setSendingNotificationOnLocationChanged(
                         locNotificationSW.isChecked());
                 preferenceHelper.setActivityDetectionInterval(
                         (long)(editMonitor.getEditTextValue(actDetectionIntervalET) * 1000.));
-                preferenceHelper.setActivityChangeNotification(
+                preferenceHelper.getSendingNotificationOnMotionChanged(
                         actNotificationSW.isChecked());
 
                 finish();

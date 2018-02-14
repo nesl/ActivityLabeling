@@ -56,7 +56,6 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
      */
     private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
 
-
     /**
      * The fastest rate for active location updates. Exact. Updates will never be more frequent
      * than this value.
@@ -214,7 +213,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
             currentLocation = locationResult.getLastLocation();
 
             boolean isForeground = serviceIsRunningInForeground(SensorDataProcessingService.this);
-            boolean locationChangeNotification = preferenceHelper.getLocationChangeNotification();
+            boolean locationChangeNotification = preferenceHelper.getSendingNotificationOnLocationChanged();
             if (isForeground && locationChangeNotification) {
                 notificationHelper.sendNotification(NotificationHelper.Type.LOCATION_CHANGED);
             }
@@ -312,7 +311,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
                     Log.i(TAG, "Different detected activities should send out notification.");
 
                     boolean isForeground = serviceIsRunningInForeground(SensorDataProcessingService.this);
-                    boolean locationChangeNotification = preferenceHelper.getLocationChangeNotification();
+                    boolean locationChangeNotification = preferenceHelper.getSendingNotificationOnLocationChanged();
                     if (isForeground && locationChangeNotification) {
                         notificationHelper.sendNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
                     }
