@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.activity.setting;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -8,6 +8,7 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import ucla.nesl.ActivityLabeling.R;
 import ucla.nesl.ActivityLabeling.edittextmonitor.EditTextMonitor;
 import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
 
