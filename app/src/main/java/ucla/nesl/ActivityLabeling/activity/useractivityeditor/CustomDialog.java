@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.activity.useractivityeditor;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -12,6 +12,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+
+import ucla.nesl.ActivityLabeling.R;
 
 /**
  * Created by zxxia on 12/21/17.

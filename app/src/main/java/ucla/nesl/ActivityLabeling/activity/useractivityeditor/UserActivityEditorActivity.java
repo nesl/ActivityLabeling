@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.activity.useractivityeditor;
 
 import android.content.Intent;
 import android.location.Location;
@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import ucla.nesl.ActivityLabeling.R;
 import ucla.nesl.ActivityLabeling.activity.main.MainActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;

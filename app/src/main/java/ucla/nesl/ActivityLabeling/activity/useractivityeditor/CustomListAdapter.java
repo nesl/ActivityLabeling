@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling;
+package ucla.nesl.ActivityLabeling.activity.useractivityeditor;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.zip.Inflater;
+
+import ucla.nesl.ActivityLabeling.R;
 
 /**
  * Created by zxxia on 12/22/17.

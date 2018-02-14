@@ -27,7 +27,7 @@ import java.util.ArrayList;
 
 import ucla.nesl.ActivityLabeling.R;
 import ucla.nesl.ActivityLabeling.activity.setting.SettingActivity;
-import ucla.nesl.ActivityLabeling.UserActivityEditorActivity;
+import ucla.nesl.ActivityLabeling.activity.useractivityeditor.UserActivityEditorActivity;
 import ucla.nesl.ActivityLabeling.service.sensordataprocessing.SensorDataProcessingService;
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
