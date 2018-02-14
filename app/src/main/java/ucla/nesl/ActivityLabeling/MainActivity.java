@@ -48,10 +48,6 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.READ_EXTERNAL_STORAGE,
     };
 
-    private ArrayList<UserActivity> actsList  = null;
-
-    private UserActivityListAdapter mActivityListAdapter;
-
     // UI Widgets.
     private ListView mActivitiesListView;
     private FloatingActionButton mAddActivityFab;
@@ -59,18 +55,16 @@ public class MainActivity extends AppCompatActivity {
     private Button mStartLocationUpdateButton;
     private Button mStopLocationUpdateButton;
 
-    // The BroadcastReceiver used to listen from broadcasts from the service.
-    //private MyReceiver myReceiver;
+    // UI helper
+    private UserActivityListAdapter mActivityListAdapter;
 
     // A reference to the service used to get location updates.
     private LocationService mService = null;
 
-    // Tracks the bound state of the service.
-    private boolean mBound = false;
-
     private UserActivityStorageManager mStoreManager;
 
     private int numSavedActivities;
+    private ArrayList<UserActivity> actsList;
 
 
     @Override
@@ -88,17 +82,12 @@ public class MainActivity extends AppCompatActivity {
         mStartLocationUpdateButton = findViewById(R.id.StartLocationUpdateBtn);
         mStopLocationUpdateButton = findViewById(R.id.StopLocationUpdateBtn);
 
-        // Update values using data stored in the Bundle.
-        updateValuesFromBundle(savedInstanceState);
-
         // Instantiate the UI widgets
         mStoreManager = new UserActivityStorageManager(this);
-        if (actsList == null) {
-            actsList = new ArrayList<>();
-            //display saved records within 24 hours
-            actsList = mStoreManager.getRecentActivities();
-            numSavedActivities = mStoreManager.getNumTotalUserActivities();
-        }
+
+        //display saved records within 24 hours
+        actsList = mStoreManager.getRecentActivities();
+        numSavedActivities = mStoreManager.getNumTotalUserActivities();
 
         mActivityListAdapter = new UserActivityListAdapter(this, actsList, mStoreManager, mService);
         mActivitiesListView.setAdapter(mActivityListAdapter);
@@ -112,16 +101,6 @@ public class MainActivity extends AppCompatActivity {
             requestPermissions();
         }
     }
-
-    /*
-    @Override
-    protected void onDestroy() {
-        // Save all unfinished activities to storage
-        mStoreManager.saveOngoingActivities(actsList);
-        super.onDestroy();
-        Log.i(TAG, "onDestroy");
-    }
-    */
 
     // ==== UI Option menu =========================================================================
     @Override
@@ -148,16 +127,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ==== Activity transition ====================================================================
-    private void updateValuesFromBundle(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            // Restore value of members from saved state
-            Log.i(TAG, "Restore saved activities");
-            if (savedInstanceState.keySet().contains(KEY_ACTIVITY_LIST)) {
-                actsList = savedInstanceState.getParcelableArrayList(KEY_ACTIVITY_LIST);
-            }
-        }
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -176,19 +145,8 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    /**
-     * Stores activity data in the Bundle.
-     */
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-
-        // Save the user's current activities list state
-        savedInstanceState.putParcelableArrayList(KEY_ACTIVITY_LIST, actsList);
-        Log.i(TAG, "OnSaveInstanceState");
-    }
-
     // ==== Service connection =====================================================================
+    //TODO: need to re-examine the service connection object
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
@@ -197,13 +155,11 @@ public class MainActivity extends AppCompatActivity {
             LocationService.LocalBinder binder = (LocationService.LocalBinder) service;
             mService = binder.getService();
             mActivityListAdapter.updateService(mService);
-            mBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             mService = null;
-            mBound = false;
         }
     };
 
@@ -240,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    //TODO: not properly use this method
     private void setButtonsState(boolean requestingLocationUpdates) {
         if (requestingLocationUpdates) {
             mStartLocationUpdateButton.setEnabled(false);
@@ -281,7 +238,6 @@ public class MainActivity extends AppCompatActivity {
                     //mService.requestLocationUpdates();
                     startService(new Intent(this, LocationService.class));
                 } else {
-                    // TODO: Handle permission denied case.
                     // Permission denied.
                     Log.i(TAG, "Permission denied.");
                     Toast.makeText(this, "Permission denied.", Toast.LENGTH_LONG).show();
