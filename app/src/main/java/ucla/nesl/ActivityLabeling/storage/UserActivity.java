@@ -100,6 +100,7 @@ public class UserActivity implements Parcelable {
         return 0;
     }
 
+    // ==== Parcel methods =========================================================================
     private UserActivity(Parcel in) {
         startTimeMs = in.readLong();
         endTimeMs = in.readLong();
@@ -133,4 +134,47 @@ public class UserActivity implements Parcelable {
             return new UserActivity[size];
         }
     };
+
+    // ==== Getters and setters for Room Database Library ==========================================
+
+    /**
+     * Please do not use getAID() directly in the code. It is declared for Room Database Library.
+     */
+    public int getAID() {
+        return aID;
+    }
+
+    /**
+     * Please do not use setAID() directly in the code. It is declared for Room Database Library.
+     */
+    public void setAID(int ID) {
+        this.aID = ID;
+    }
+/*
+    @ColumnInfo(name = "start_time_ms")
+    public long startTimeMs = Utils.INVALID_TIME;
+
+    @ColumnInfo(name = "end_time_ms")
+    public long endTimeMs = Utils.INVALID_TIME;
+
+    @ColumnInfo(name = "start_lat")
+    public double startLatitude = Utils.INVALID_LOCATION_VAL;
+
+    @ColumnInfo(name = "start_lon")
+    public double startLongitude = Utils.INVALID_LOCATION_VAL;
+
+    @ColumnInfo(name = "end_lat")
+    public double endLatitude = Utils.INVALID_LOCATION_VAL;
+
+    @ColumnInfo(name = "end_lon")
+    public double endLongitude = Utils.INVALID_LOCATION_VAL;
+
+    @ColumnInfo(name = "uloc_label")
+    public @NonNull String microLocationLabel = "";
+
+    @ColumnInfo(name = "act_type")
+    public @NonNull String type = "";  //TODO: what type?
+
+    @ColumnInfo(name = "description")
+    public @NonNull String description = "";*/
 }

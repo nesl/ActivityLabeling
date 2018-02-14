@@ -1,0 +1,87 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "aba0ee99b31ab1814eace1248a2a4c8f",
+    "entities": [
+      {
+        "tableName": "user_activity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`aID` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `start_time_ms` INTEGER NOT NULL, `end_time_ms` INTEGER NOT NULL, `start_lat` REAL NOT NULL, `start_lon` REAL NOT NULL, `end_lat` REAL NOT NULL, `end_lon` REAL NOT NULL, `uloc_label` TEXT NOT NULL, `act_type` TEXT NOT NULL, `description` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "aID",
+            "columnName": "aID",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startTimeMs",
+            "columnName": "start_time_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endTimeMs",
+            "columnName": "end_time_ms",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startLatitude",
+            "columnName": "start_lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startLongitude",
+            "columnName": "start_lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endLatitude",
+            "columnName": "end_lat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endLongitude",
+            "columnName": "end_lon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "microLocationLabel",
+            "columnName": "uloc_label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "act_type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "aID"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"aba0ee99b31ab1814eace1248a2a4c8f\")"
+    ]
+  }
+}

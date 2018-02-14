@@ -18,7 +18,7 @@ public interface UserActivityDao {
     @Insert
     void insert(UserActivity activity);
 
-    @Query("SELECT * FROM user_activity WHERE end_time_ms = " + Utils.INVALID_TIME + "ORDER BY start_time_ms DESC")
+    @Query("SELECT * FROM user_activity WHERE end_time_ms = " + Utils.INVALID_TIME + " ORDER BY start_time_ms DESC")
     List<UserActivity> getAllWithInvalidEndTimeStartTimeDesc();
 
     @Query("SELECT * FROM user_activity WHERE end_time_ms >= :threshold ORDER BY start_time_ms DESC")
