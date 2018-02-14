@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private UserActivityListAdapter mActivityListAdapter;
 
     // A reference to the service used to get location updates.
-    private LocationService mService = null;
+    private SensorDataProcessingService mService = null;
 
     private UserActivityStorageManager mStoreManager;
 
@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
         attachButtonClickEventListeners();
 
-        startService(new Intent(this, LocationService.class));
+        startService(new Intent(this, SensorDataProcessingService.class));
     }
 
     // ==== Activity transition ====================================================================
@@ -157,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.i(TAG, "onServiceConnected");
-            LocationService.LocalBinder binder = (LocationService.LocalBinder) service;
+            SensorDataProcessingService.LocalBinder binder = (SensorDataProcessingService.LocalBinder) service;
             mService = binder.getService();
             mActivityListAdapter.updateService(mService);
         }

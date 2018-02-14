@@ -44,7 +44,7 @@
         </activity>
 
         <service
-            android:name=".LocationService"
+            android:name=".SensorDataProcessingService"
             android:enabled="true"
             android:exported="true" />
         <service

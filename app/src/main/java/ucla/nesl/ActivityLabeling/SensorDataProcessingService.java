@@ -45,9 +45,9 @@ import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
  *   - Sending notifications upon location or motion activity changes
  */
 
-public class LocationService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener{
+public class SensorDataProcessingService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener{
 
-    private static final String TAG = LocationService.class.getSimpleName();
+    private static final String TAG = SensorDataProcessingService.class.getSimpleName();
 
     private static final long DETECTION_INTERVAL_IN_MILLISECONDS = 10000L;
 
@@ -213,7 +213,7 @@ public class LocationService extends Service implements SharedPreferences.OnShar
 
             currentLocation = locationResult.getLastLocation();
 
-            boolean isForeground = serviceIsRunningInForeground(LocationService.this);
+            boolean isForeground = serviceIsRunningInForeground(SensorDataProcessingService.this);
             boolean locationChangeNotification = preferenceHelper.getLocationChangeNotification();
             if (isForeground && locationChangeNotification) {
                 notificationHelper.sendNotification(NotificationHelper.Type.LOCATION_CHANGED);
@@ -253,7 +253,7 @@ public class LocationService extends Service implements SharedPreferences.OnShar
     public void requestLocationUpdates() {
         Log.i(TAG, "Requesting location updates");
 
-        startService(new Intent(getApplicationContext(), LocationService.class));
+        startService(new Intent(getApplicationContext(), SensorDataProcessingService.class));
         try {
             mFusedLocationClient.requestLocationUpdates(mLocationRequest,
                     mLocationCallback, Looper.myLooper());
@@ -277,8 +277,8 @@ public class LocationService extends Service implements SharedPreferences.OnShar
 
 
     public class LocalBinder extends Binder {
-        LocationService getService() {
-            return LocationService.this;
+        SensorDataProcessingService getService() {
+            return SensorDataProcessingService.this;
         }
     }
 
@@ -311,7 +311,7 @@ public class LocationService extends Service implements SharedPreferences.OnShar
                 if (detectedActivity.getType() != mLastDetectedActivity.getType()) {
                     Log.i(TAG, "Different detected activities should send out notification.");
 
-                    boolean isForeground = serviceIsRunningInForeground(LocationService.this);
+                    boolean isForeground = serviceIsRunningInForeground(SensorDataProcessingService.this);
                     boolean locationChangeNotification = preferenceHelper.getLocationChangeNotification();
                     if (isForeground && locationChangeNotification) {
                         notificationHelper.sendNotification(NotificationHelper.Type.ACTIVITY_CHANGED);

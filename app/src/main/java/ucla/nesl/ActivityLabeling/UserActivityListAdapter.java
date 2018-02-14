@@ -27,10 +27,10 @@ public class UserActivityListAdapter extends BaseAdapter {
     private LayoutInflater mInflater;
     private UserActivityStorageManager mStore;
 
-    private LocationService mService;
+    private SensorDataProcessingService mService;
 
     UserActivityListAdapter(MainActivity activity, List<UserActivity> actsList,
-                            UserActivityStorageManager actStoreMngr, LocationService service) {
+                            UserActivityStorageManager actStoreMngr, SensorDataProcessingService service) {
         mList = actsList;
 
         mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -38,7 +38,7 @@ public class UserActivityListAdapter extends BaseAdapter {
         mService = service;
     }
 
-    public void updateService(LocationService service){
+    public void updateService(SensorDataProcessingService service){
         mService = service;
     }
 
