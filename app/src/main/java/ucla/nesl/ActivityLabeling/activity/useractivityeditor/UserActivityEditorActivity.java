@@ -119,7 +119,7 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
     private void prepareStartLocation() {
         TextView startLocTV = findViewById(R.id.LocValTV);
-        startLocTV.setText(Utils.locToString(mCurLoc));
+        startLocTV.setText(Utils.locationToString(mCurLoc));
     }
 
     private void prepareSpinner(final int spinnerID, List<String> items) {

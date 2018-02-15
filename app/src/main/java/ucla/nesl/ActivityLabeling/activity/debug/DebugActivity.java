@@ -102,7 +102,7 @@ public class DebugActivity extends AppCompatActivity {
         infoText.setText(Utils.stringJoin("\n",
                 "**** About service ****",
                 "Created time: " + Utils.timeToString(mService.getCreatedTimestampMs()),
-                "Location: " + Utils.locToString(mService.getCurrentLocation()),
+                "Location: " + Utils.locationToString(mService.getCurrentLocation()),
                 "Motion activity: " + mService.getCurrentMotionActivity()
         ));
     }

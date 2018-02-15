@@ -80,8 +80,8 @@ public class UserActivityListAdapter extends BaseAdapter {
 
         startTV.setText(Utils.timeToString(actInfo.startTimeMs));
         endTV.setText(Utils.timeToString(actInfo.endTimeMs));
-        startLocTV.setText(Utils.locToString(actInfo.startLatitude, actInfo.startLongitude));
-        endLocTV.setText(Utils.locToString(actInfo.endLatitude, actInfo.endLongitude));
+        startLocTV.setText(Utils.locationToString(actInfo.startLatitude, actInfo.startLongitude));
+        endLocTV.setText(Utils.locationToString(actInfo.endLatitude, actInfo.endLongitude));
         ulocTV.setText(actInfo.microLocationLabel);
         typeTV.setText(actInfo.type);
         dscrpTV.setText(actInfo.description);
@@ -122,7 +122,7 @@ public class UserActivityListAdapter extends BaseAdapter {
 
                     // update UI
                     endTV.setText(Utils.timeToString(actInfo.endTimeMs));
-                    endLocTV.setText(Utils.locToString(actInfo.endLatitude, actInfo.endLongitude));
+                    endLocTV.setText(Utils.locationToString(actInfo.endLatitude, actInfo.endLongitude));
                     stopBtn.setEnabled(false);
                     stopBtn.setVisibility(View.GONE);
 

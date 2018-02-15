@@ -8,6 +8,10 @@ import java.util.Locale;
 
 /**
  * Created by zxxia on 12/24/17.
+ *
+ * Provide methods cover
+ *   - Common objects to strings
+ *   - String related utility
  */
 
 public class Utils {
@@ -15,6 +19,8 @@ public class Utils {
     public static final long INVALID_TIME = -1L;
     public static final double INVALID_LOCATION_VAL = -1000.0;
 
+    //region Section: Objects to strings
+    // =============================================================================================
     public static String timeToString(long timeMs) {
         if (timeMs == INVALID_TIME) {
             return "Not Available";
@@ -22,49 +28,25 @@ public class Utils {
         return DateFormat.format("HH:mm:ss MM/dd/yyyy", new Date(timeMs)).toString();
     }
 
-    public static String locToString(Location location) {
+    public static String locationToString(Location location) {
         if (location == null) {
-            return locToString(INVALID_LOCATION_VAL, INVALID_LOCATION_VAL);
+            return locationToString(INVALID_LOCATION_VAL, INVALID_LOCATION_VAL);
         } else {
-            return locToString(location.getLatitude(), location.getLongitude());
+            return locationToString(location.getLatitude(), location.getLongitude());
         }
     }
 
-    public static String locToString(double latitude, double longitude) {
+    public static String locationToString(double latitude, double longitude) {
         if (latitude == INVALID_LOCATION_VAL || longitude == INVALID_LOCATION_VAL) {
             return "Unknown Location";
         } else {
             return String.format(Locale.getDefault(), "(%.6f, %.6f)", latitude, longitude);
         }
     }
+    //endregion
 
-    /**
-     * Returns a human readable String corresponding to a detected activity type.
-     */
-    /*
-    public static String getActivityString(int detectedActivityType) {
-        switch (detectedActivityType) {
-            case DetectedActivity.IN_VEHICLE:
-                return "In a vehicle";
-            case DetectedActivity.ON_BICYCLE:
-                return "On a bicycle";
-            case DetectedActivity.ON_FOOT:
-                return "On foot";
-            case DetectedActivity.RUNNING:
-                return "Running";
-            case DetectedActivity.STILL:
-                return "Still";
-            case DetectedActivity.TILTING:
-                return "Tilting";
-            case DetectedActivity.UNKNOWN:
-                return "Unknown activity";
-            case DetectedActivity.WALKING:
-                return "Walking";
-            default:
-                return "Unidentifiable activity: " + detectedActivityType;
-        }
-    }*/
-
+    //region Section: String utilities
+    // =============================================================================================
     public static String stringJoin(CharSequence delimiter, CharSequence... args) {
         StringBuilder builder = new StringBuilder();
         boolean first = true;
@@ -78,4 +60,5 @@ public class Utils {
         }
         return builder.toString();
     }
+    //endregion
 }
