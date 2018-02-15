@@ -3,8 +3,6 @@ package ucla.nesl.ActivityLabeling.utils;
 import android.location.Location;
 import android.text.format.DateFormat;
 
-import com.google.android.gms.location.DetectedActivity;
-
 import java.util.Date;
 import java.util.Locale;
 
@@ -43,8 +41,9 @@ public class Utils {
     /**
      * Returns a human readable String corresponding to a detected activity type.
      */
+    /*
     public static String getActivityString(int detectedActivityType) {
-        switch(detectedActivityType) {
+        switch (detectedActivityType) {
             case DetectedActivity.IN_VEHICLE:
                 return "In a vehicle";
             case DetectedActivity.ON_BICYCLE:
@@ -64,5 +63,19 @@ public class Utils {
             default:
                 return "Unidentifiable activity: " + detectedActivityType;
         }
+    }*/
+
+    public static String stringJoin(CharSequence delimiter, CharSequence... args) {
+        StringBuilder builder = new StringBuilder();
+        boolean first = true;
+        for (CharSequence cs : args) {
+            if (first) {
+                first = false;
+            } else {
+                builder.append(delimiter);
+            }
+            builder.append(cs);
+        }
+        return builder.toString();
     }
 }

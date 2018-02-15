@@ -25,8 +25,8 @@
         <activity
             android:name=".activity.main.MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -52,7 +52,11 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".activity.setting.SettingActivity"></activity>
+        <activity android:name=".activity.setting.SettingActivity" />
+        <activity
+            android:name=".activity.debug.DebugActivity"
+            android:label="@string/title_activity_debug"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

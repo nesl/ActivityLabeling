@@ -9,8 +9,6 @@ import android.util.Log;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
-import ucla.nesl.ActivityLabeling.utils.Utils;
-
 public class DetectedActivitiesIntentService extends IntentService {
 
     static final String ACTION_BROADCAST = ".broadcast";
@@ -37,8 +35,7 @@ public class DetectedActivitiesIntentService extends IntentService {
 
         // Log each activity.
         Log.i(TAG, "activities detected");
-        Log.i(TAG, Utils.getActivityString(detectedActivity.getType())
-                + " " + detectedActivity.getConfidence() + "%");
+        Log.i(TAG, detectedActivity.toString() + " " + detectedActivity.getConfidence() + "%");
 
         // Notify anyone listening for broadcasts about the new location.
         Intent intentToSend = new Intent(ACTION_BROADCAST);

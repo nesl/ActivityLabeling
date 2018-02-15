@@ -26,6 +26,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import ucla.nesl.ActivityLabeling.R;
+import ucla.nesl.ActivityLabeling.activity.debug.DebugActivity;
 import ucla.nesl.ActivityLabeling.activity.setting.SettingActivity;
 import ucla.nesl.ActivityLabeling.activity.useractivityeditor.UserActivityEditorActivity;
 import ucla.nesl.ActivityLabeling.service.sensordataprocessing.SensorDataProcessingService;
@@ -110,16 +111,17 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-            startActivity(intent);
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_settings: {
+                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            case R.id.action_debug: {
+                Intent intent = new Intent(getApplicationContext(), DebugActivity.class);
+                startActivity(intent);
+                return true;
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -274,9 +276,9 @@ public class MainActivity extends AppCompatActivity {
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
+        public void onServiceConnected(ComponentName name, IBinder iBinder) {
             Log.i(TAG, "onServiceConnected");
-            SensorDataProcessingService.LocalBinder binder = (SensorDataProcessingService.LocalBinder) service;
+            SensorDataProcessingService.LocalBinder binder = (SensorDataProcessingService.LocalBinder) iBinder;
             mService = binder.getService();
             mActivityListAdapter.updateService(mService);
         }

@@ -71,8 +71,11 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
      */
     private boolean mChangingConfiguration = false;
 
-    private NotificationHelper notificationHelper;
+    // Service information
+    private long serviceCreatedTimestampMs;
 
+    // Notification related
+    private NotificationHelper notificationHelper;
 
     // Location status
     private LocationRequest mLocationRequest;
@@ -120,6 +123,9 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
 
         // Set up notification tasks
         notificationHelper = new NotificationHelper(this);
+
+        // Service property
+        serviceCreatedTimestampMs = System.currentTimeMillis();
     }
 
     @Override
@@ -328,6 +334,10 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         return currentLocation;
     }
 
+    public DetectedActivity getCurrentMotionActivity() {
+        return mLastDetectedActivity;
+    }
+
 
     /**
      * Registers for activity recognition updates using
@@ -415,5 +425,9 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
             removeActivityUpdates();
             sendActivityUpdatesRequest();
         }
+    }
+
+    public long getCreatedTimestampMs() {
+        return serviceCreatedTimestampMs;
     }
 }
