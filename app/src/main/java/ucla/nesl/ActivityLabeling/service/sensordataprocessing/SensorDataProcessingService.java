@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.location.Location;
 import android.os.Binder;
 import android.os.Handler;
@@ -35,12 +34,16 @@ import com.google.android.gms.tasks.Task;
 
 import ucla.nesl.ActivityLabeling.notification.NotificationHelper;
 import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
+import ucla.nesl.ActivityLabeling.utils.ToastShortcut;
 
 
 /**
  * Created by zxxia.
  *
- * This service provides the following functionalities:
+ * We treat SensorDataProcessingService as both a foreground service and a bound service. We declare
+ * it as a foreground service to collect data even when the activities disappear. We declare it as
+ * a bound service because some activities have to get information from the service. In summary,
+ * this service provides the following capabilities:
  *   - Collecting location data
  *   - Collecting motion activity data
  *   - Sending notifications upon location or motion activity changes
@@ -69,13 +72,14 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
      * orientation change. We create a foreground service notification only if the former takes
      * place.
      */
-    private boolean mChangingConfiguration = false;
+    //private boolean mChangingConfiguration = false;
 
     // Service information
     private long serviceCreatedTimestampMs;
 
     // Notification related
     private NotificationHelper notificationHelper;
+    private ToastShortcut toastHelper;
 
     // Location status
     private LocationRequest mLocationRequest;
@@ -99,14 +103,24 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
     private SharedPreferences mSharedPreferences;
 
 
+    //region Section: Service life cycle - treat as a foreground service
+    // =============================================================================================
     @Override
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "onCreate");
 
-        // Acquire application properties
+        // Service basic properties
+        serviceCreatedTimestampMs = System.currentTimeMillis();
+
+        // Acquire application properties/preferences
         preferenceHelper = new SharedPreferenceHelper(this);
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
+
+        // Initialize helpers
+        notificationHelper = new NotificationHelper(this);
+        toastHelper = new ToastShortcut(this);
 
         // Initialize location data source
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -120,16 +134,26 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         // Initialize motion activity data source
         mActivityRecognitionClient = new ActivityRecognitionClient(this);
         mReceiver = new DetectedActivityReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver,
+                new IntentFilter(DetectedActivitiesIntentService.ACTION_BROADCAST));
 
-        // Set up notification tasks
-        notificationHelper = new NotificationHelper(this);
+        // Declare itself as a foreground service
+        notificationHelper.serviceNotifyStartingForeground(
+                this, NotificationHelper.Type.FOREGROUND_SERVICE);
+    }
 
-        // Service property
-        serviceCreatedTimestampMs = System.currentTimeMillis();
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "onStartCommand");
+        //notificationHelper.cancelNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
+        //notificationHelper.cancelNotification(NotificationHelper.Type.LOCATION_CHANGED);
+        // Tells the system to not try to recreate the service after it has been killed
+        return START_NOT_STICKY;
     }
 
     @Override
     public void onDestroy() {
+        //TODO: re-examine this method
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
@@ -139,27 +163,18 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         mServiceHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
+    //endregion
 
+    //region Section: Service life cycle - binder part, and binder class
+    // =============================================================================================
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand");
-        mSharedPreferences.registerOnSharedPreferenceChangeListener(this);
-        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver,
-                new IntentFilter(DetectedActivitiesIntentService.ACTION_BROADCAST));
-
-        notificationHelper.cancelNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
-        notificationHelper.cancelNotification(NotificationHelper.Type.LOCATION_CHANGED);
-        // Tells the system to not try to recreate the service after it has been killed
-        return START_NOT_STICKY;
-    }
-
+/*
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mChangingConfiguration = true;
     }
-
+*/
     @Override
     public IBinder onBind(Intent intent) {
         // Called when a client (MainActivity in case of this sample) comes to the foreground
@@ -167,10 +182,10 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         // when that happens.
         Log.i(TAG, "in onBind()");
         stopForeground(true);
-        mChangingConfiguration = false;
+        //mChangingConfiguration = false;
         return mBinder;
     }
-
+/*
     @Override
     public void onRebind(Intent intent) {
         // Called when a client (MainActivity in case of this sample) returns to the foreground
@@ -181,19 +196,21 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         mChangingConfiguration = false;
         super.onRebind(intent);
     }
-
+*/
     @Override
     public boolean onUnbind(Intent intent) {
         Log.i(TAG, "onUbind");
 
+        /*
         // Called when the last client (MainActivity in case of this sample) unbinds from this
         // service. If this method is called due to a configuration change in MainActivity, we
         // do nothing. Otherwise, we make this service a foreground service.
 
+
         //TODO: check requesting state
         if (!mChangingConfiguration) {
             Log.i(TAG, "Starting foreground service");
-            /*
+
             // TODO(developer). If targeting O, use the following code.
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
                 mNotificationManager.startServiceInForeground(new Intent(this,
@@ -201,36 +218,40 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
             } else {
                 startForeground(NOTIFICATION_ID, getNotification());
             }
-             */
+
             notificationHelper.serviceNotifyStartingForeground(
                     this, NotificationHelper.Type.FOREGROUND_SERVICE);
         }
-        return true; // Ensures onRebind() is called when a client re-binds.
+        */
+        return super.onUnbind(intent);
     }
 
-    // ==== Location callback and location request =================================================
-    /**
-     * Callback for changes in location.
-     */
+    public class LocalBinder extends Binder {
+        public SensorDataProcessingService getService() {
+            return SensorDataProcessingService.this;
+        }
+    }
+    //endregion
+
+    //region Section: Location callback and location request
+    // =============================================================================================
     private LocationCallback mLocationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
-            super.onLocationResult(locationResult);
-
             currentLocation = locationResult.getLastLocation();
 
-            boolean isForeground = serviceIsRunningInForeground(SensorDataProcessingService.this);
-            boolean locationChangeNotification = preferenceHelper.getSendingNotificationOnLocationChanged();
-            if (isForeground && locationChangeNotification) {
+            //boolean isForeground = serviceIsRunningInForeground(SensorDataProcessingService.this);
+            //boolean locationChangeNotification = preferenceHelper.getSendingNotificationOnLocationChanged();
+            //if (isForeground && locationChangeNotification) {
                 notificationHelper.sendNotification(NotificationHelper.Type.LOCATION_CHANGED);
-            }
+            //}
             Log.i(TAG, "Received Location Update");
         }
 
         @Override
         public void onLocationAvailability(LocationAvailability locationAvailability) {
-            super.onLocationAvailability(locationAvailability);
             if (!locationAvailability.isLocationAvailable()) {
+
                 Toast.makeText(getApplicationContext(), "Current Location cannot be determined.", Toast.LENGTH_LONG).show();
             }
         }
@@ -280,13 +301,8 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
             Log.e(TAG, "Lost location permission. Could not remove updates. " + unlikely);
         }
     }
+    //endregion
 
-
-    public class LocalBinder extends Binder {
-        public SensorDataProcessingService getService() {
-            return SensorDataProcessingService.this;
-        }
-    }
 
 
     /**
@@ -363,10 +379,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
             @Override
             public void onFailure(@NonNull Exception e) {
                 //Log.w(TAG, "activity update request failed");
-                Toast.makeText(getApplicationContext(),
-                        "activity update request failed",
-                        Toast.LENGTH_SHORT)
-                        .show();
+                toastHelper.showShort("activity update request failed");
             }
         });
     }
@@ -382,10 +395,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void result) {
-                Toast.makeText(getApplicationContext(),
-                        "activity update remove success",
-                        Toast.LENGTH_SHORT)
-                        .show();
+                toastHelper.showShort("activity update remove success");
             }
         });
 
@@ -393,8 +403,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
             @Override
             public void onFailure(@NonNull Exception e) {
                 Log.w(TAG, "Failed to enable activity recognition.");
-                Toast.makeText(getApplicationContext(), "activity update remove failed",
-                        Toast.LENGTH_SHORT).show();
+                toastHelper.showShort("activity update remove failed");
             }
         });
     }
