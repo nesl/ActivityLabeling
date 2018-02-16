@@ -61,12 +61,8 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
             UPDATE_INTERVAL_IN_MILLISECONDS / 2;
 
-    /**
-     * Used to check whether the bound activity has really gone away and not unbound as part of an
-     * orientation change. We create a foreground service notification only if the former takes
-     * place.
-     */
-    //private boolean mChangingConfiguration = false;
+    // Binder
+    private final IBinder mBinder = new LocalBinder();
 
     // Service information
     private long serviceCreatedTimestampMs;
@@ -75,13 +71,9 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
     private NotificationHelper notificationHelper;
     private ToastShortcut toastHelper;
 
-    // Location status
+    // Location collection proxy and location status
     private AggressiveLocationDataCollector locationCollector;
     private Location currentLocation;
-
-    //private Handler mServiceHandler;
-
-    private final IBinder mBinder = new LocalBinder();
 
     /**
      * The entry point for interacting with activity recognition.
@@ -154,21 +146,13 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
 
         notificationHelper.cancelNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
         notificationHelper.cancelNotification(NotificationHelper.Type.LOCATION_CHANGED);
-        //mServiceHandler.removeCallbacksAndMessages(null);
+
         super.onDestroy();
     }
     //endregion
 
     //region Section: Service life cycle - binder part, and binder class
     // =============================================================================================
-
-/*
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mChangingConfiguration = true;
-    }
-*/
     @Override
     public IBinder onBind(Intent intent) {
         // Called when a client (MainActivity in case of this sample) comes to the foreground
@@ -179,18 +163,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         //mChangingConfiguration = false;
         return mBinder;
     }
-/*
-    @Override
-    public void onRebind(Intent intent) {
-        // Called when a client (MainActivity in case of this sample) returns to the foreground
-        // and binds once again with this service. The service should cease to be a foreground
-        // service when that happens.
-        Log.i(TAG, "in onRebind()");
-        stopForeground(true);
-        mChangingConfiguration = false;
-        super.onRebind(intent);
-    }
-*/
+
     @Override
     public boolean onUnbind(Intent intent) {
         Log.i(TAG, "onUbind");
@@ -233,12 +206,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         @Override
         public void onLocationResult(LocationResult locationResult) {
             currentLocation = locationResult.getLastLocation();
-
-            //boolean isForeground = serviceIsRunningInForeground(SensorDataProcessingService.this);
-            //boolean locationChangeNotification = preferenceHelper.getSendingNotificationOnLocationChanged();
-            //if (isForeground && locationChangeNotification) {
-                notificationHelper.sendNotification(NotificationHelper.Type.LOCATION_CHANGED);
-            //}
+            notificationHelper.sendNotification(NotificationHelper.Type.LOCATION_CHANGED);
             Log.i(TAG, "Received Location Update");
         }
 
@@ -249,35 +217,6 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
             }
         }
     };
-
-
-    /**
-     * Makes a request for location updates.
-     */
-    /*public void requestLocationUpdates() {
-        Log.i(TAG, "Requesting location updates");
-
-        startService(new Intent(getApplicationContext(), SensorDataProcessingService.class));
-        try {
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                    mLocationCallback, Looper.myLooper());
-        } catch (SecurityException unlikely) {
-            Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
-        }
-    }*/
-
-    /**
-     * Removes location updates.
-     */
-    /*public void removeLocationUpdates() {
-        Log.i(TAG, "Removing location updates");
-        try {
-            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-            stopSelf();
-        } catch (SecurityException unlikely) {
-            Log.e(TAG, "Lost location permission. Could not remove updates. " + unlikely);
-        }
-    }*/
     //endregion
 
 
