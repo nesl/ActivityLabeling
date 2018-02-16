@@ -10,10 +10,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Binder;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
@@ -22,12 +19,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -82,11 +76,10 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
     private ToastShortcut toastHelper;
 
     // Location status
-    private LocationRequest mLocationRequest;
-    private FusedLocationProviderClient mFusedLocationClient;
+    private AggressiveLocationDataCollector locationCollector;
     private Location currentLocation;
 
-    private Handler mServiceHandler;
+    //private Handler mServiceHandler;
 
     private final IBinder mBinder = new LocalBinder();
 
@@ -123,13 +116,12 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         toastHelper = new ToastShortcut(this);
 
         // Initialize location data source
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        HandlerThread handlerThread = new HandlerThread(TAG);
-        handlerThread.start();
-        mServiceHandler = new Handler(handlerThread.getLooper());
-
-        createLocationRequest();
+        locationCollector = new AggressiveLocationDataCollector(this, mLocationCallback);
+        locationCollector.updateParameters(
+                preferenceHelper.getLocationUpdateIntervalMsec(),
+                preferenceHelper.getLocationMinimumDisplacementMeter()
+        );
+        locationCollector.start();
 
         // Initialize motion activity data source
         mActivityRecognitionClient = new ActivityRecognitionClient(this);
@@ -158,9 +150,11 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
                 .unregisterOnSharedPreferenceChangeListener(this);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
 
+        locationCollector.stop();
+
         notificationHelper.cancelNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
         notificationHelper.cancelNotification(NotificationHelper.Type.LOCATION_CHANGED);
-        mServiceHandler.removeCallbacksAndMessages(null);
+        //mServiceHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
     }
     //endregion
@@ -251,33 +245,16 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         @Override
         public void onLocationAvailability(LocationAvailability locationAvailability) {
             if (!locationAvailability.isLocationAvailable()) {
-
-                Toast.makeText(getApplicationContext(), "Current Location cannot be determined.", Toast.LENGTH_LONG).show();
+                toastHelper.showLong("Current Location cannot be determined.");
             }
         }
     };
 
-    /**
-     * Sets the location request parameters.
-     */
-    private void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-
-        mLocationRequest.setInterval(preferenceHelper.getLocationUpdateIntervalMsec());
-
-        // Sets the fastest rate for active location updates. This interval is exact, and your
-        // application will never receive updates faster than this value.
-        //long fastestInterval = interval / 2;
-        //mLocationRequest.setFastestInterval(fastestInterval);
-
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setSmallestDisplacement(preferenceHelper.getLocationMinimumDisplacementMeter());
-    }
 
     /**
      * Makes a request for location updates.
      */
-    public void requestLocationUpdates() {
+    /*public void requestLocationUpdates() {
         Log.i(TAG, "Requesting location updates");
 
         startService(new Intent(getApplicationContext(), SensorDataProcessingService.class));
@@ -287,12 +264,12 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         } catch (SecurityException unlikely) {
             Log.e(TAG, "Lost location permission. Could not request updates. " + unlikely);
         }
-    }
+    }*/
 
     /**
      * Removes location updates.
      */
-    public void removeLocationUpdates() {
+    /*public void removeLocationUpdates() {
         Log.i(TAG, "Removing location updates");
         try {
             mFusedLocationClient.removeLocationUpdates(mLocationCallback);
@@ -300,7 +277,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         } catch (SecurityException unlikely) {
             Log.e(TAG, "Lost location permission. Could not remove updates. " + unlikely);
         }
-    }
+    }*/
     //endregion
 
 
@@ -425,10 +402,10 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         if (key.equals(SharedPreferenceHelper.KEY_LOCATION_UPDATE_INTERVAL) ||
                 key.equals(SharedPreferenceHelper.KEY_LOCATION_MINIMUM_DISPLACEMENT)) {
             Log.i(TAG, "Location Setting Changed");
-            createLocationRequest();
-
-            removeLocationUpdates();
-            requestLocationUpdates();
+            locationCollector.updateParameters(
+                    preferenceHelper.getLocationUpdateIntervalMsec(),
+                    preferenceHelper.getLocationMinimumDisplacementMeter()
+            );
         } else if (key.equals(SharedPreferenceHelper.KEY_ACTIVITY_DETECTION_INTERVAL)) {
             Log.i(TAG, "Activity Setting Changed");
             removeActivityUpdates();
