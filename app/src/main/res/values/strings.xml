@@ -17,8 +17,7 @@
     <string name="launch_activity">Launch activity</string>
     <string name="remove_location_updates">Remove location updates</string>
 
-    <string-array name="microlocations_array">
-        <item>Select a microlocation</item>>
+    <string-array name="default_microlocation_array">
         <item>Office</item>
         <item>Lab</item>
         <item>Classroom</item>
@@ -27,8 +26,7 @@
         <item>Living Room</item>
     </string-array>
 
-    <string-array name="activityTypes_array">
-        <item>Select an activity type</item>
+    <string-array name="default_user_activity_type_array">
         <item>Cooking</item>
         <item>Eating</item>
         <item>Laundry</item>

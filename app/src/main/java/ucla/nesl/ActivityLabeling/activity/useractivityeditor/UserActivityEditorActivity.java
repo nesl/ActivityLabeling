@@ -63,7 +63,7 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
         updateValuesFromBundle(savedInstanceState);
         mStoreManager = new UserActivityStorageManager(this);
-        mUsrActTypes = mStoreManager.loadUsrActTpyes();
+        mUsrActTypes = mStoreManager.loadUsrActTypes();
         mUsrUlocs = mStoreManager.loadUsrUlocs();
 
         prepareStartTime();
@@ -198,7 +198,8 @@ public class UserActivityEditorActivity extends AppCompatActivity {
                 Intent myIntent = new Intent(getApplicationContext(), MainActivity.class);
                 myIntent.putExtra(ACTIVITY_INFO, act);
                 setResult(RESULT_OK, myIntent);
-                finish(); // TODO: do we need this line?
+
+                finish();
             }
         });
     }

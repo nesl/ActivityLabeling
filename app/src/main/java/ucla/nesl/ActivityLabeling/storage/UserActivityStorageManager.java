@@ -62,9 +62,9 @@ public class UserActivityStorageManager {
 
         // default location and activity labels
         defaultMicroLocationLabels = new ArrayList<>(Arrays.asList(
-                context.getResources().getStringArray(R.array.microlocations_array)));
+                context.getResources().getStringArray(R.array.default_microlocation_array)));
         defaultActivityLabels = new ArrayList<>(Arrays.asList(
-                context.getResources().getStringArray(R.array.activityTypes_array)));
+                context.getResources().getStringArray(R.array.default_user_activity_type_array)));
     }
 
     /**
@@ -94,7 +94,7 @@ public class UserActivityStorageManager {
                 FILE_NAME_USER_MICRO_LOCATION_LABELS, defaultMicroLocationLabels, false);
     }
 
-    public ArrayList<String> loadUsrActTpyes() {
+    public ArrayList<String> loadUsrActTypes() {
         return readLinesFromFileProvideDefault(
                 FILE_NAME_USER_ACTIVITY_LABELS, defaultActivityLabels, false);
     }
@@ -134,7 +134,7 @@ public class UserActivityStorageManager {
     private ArrayList<String> readLinesFromFileProvideDefault(
             String filename, ArrayList<String> defaultVal, boolean allowEmpty) {
         try {
-            ArrayList<String> locationLabels = readLinesFromFile(FILE_NAME_USER_MICRO_LOCATION_LABELS);
+            ArrayList<String> locationLabels = readLinesFromFile(filename);
             if (locationLabels.size() > 0 || allowEmpty)
                 return locationLabels;
         } catch (Exception e) {
