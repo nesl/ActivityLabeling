@@ -262,6 +262,8 @@ public class MainActivity extends AppCompatActivity {
                     actsList.add(newActivity);
                     mActivityListAdapter.notifyDataSetChanged();
 
+                    mStoreManager.addNewUserActivity(newActivity);
+
                     numSavedActivities++;
                     userActivityCountTextView.setText("Number of activities recorded: " + numSavedActivities);
                 }
