@@ -22,6 +22,7 @@ import ucla.nesl.ActivityLabeling.R;
 import ucla.nesl.ActivityLabeling.activity.main.MainActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
+import ucla.nesl.ActivityLabeling.uiwidget.NothingSelectedSpinnerAdapter;
 import ucla.nesl.ActivityLabeling.utils.Utils;
 
 
@@ -30,12 +31,6 @@ public class UserActivityEditorActivity extends AppCompatActivity {
     private static final String TAG = UserActivityEditorActivity.class.getSimpleName();
 
     public static final String ACTIVITY_INFO = "Activity_Info";
-
-    /**
-     * Keys for storing activity state in the Bundle.
-     */
-    private static final String KEY_USR_ULOC_LIST = "User MicroLocation Items";
-    private static final String KEY_USR_ACT_TYPE_LIST = "User Activity Type Items";
 
     private long mStartTime;
     private String mMicroLocation;
@@ -48,6 +43,9 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
     private Location mCurLoc;
 
+
+    //region Section: Activity life cycle
+    // =============================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "OnCreate");
@@ -61,104 +59,84 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
         mCurLoc = getIntent().getExtras().getParcelable(MainActivity.INTENT_KEY_CURRENT_LOCATION);
 
-        updateValuesFromBundle(savedInstanceState);
         mStoreManager = new UserActivityStorageManager(this);
         mUsrActTypes = mStoreManager.loadUsrActTypes();
         mUsrUlocs = mStoreManager.loadUsrUlocs();
 
-        prepareStartTime();
-        prepareStartLocation();
-        prepareSpinner(R.id.MicrolocsSp, mUsrUlocs);
-        prepareSpinner(R.id.ActivityTypesSp, mUsrActTypes);
-
-        prepareBtns();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-
-        // Save the user's current activities list state
-        savedInstanceState.putStringArrayList(KEY_USR_ULOC_LIST, mUsrUlocs);
-        savedInstanceState.putStringArrayList(KEY_USR_ACT_TYPE_LIST, mUsrActTypes);
-        Log.i(TAG, "OnSaveInstanceState");
-    }
-
-
-    /**
-     * Updates fields based on data stored in the bundle.
-     *
-     * @param savedInstanceState The activity state saved in the Bundle.
-     */
-    private void updateValuesFromBundle(Bundle savedInstanceState) {
-        if (savedInstanceState != null) {
-            // Restore value of members from saved state
-
-            if (savedInstanceState.keySet().contains(KEY_USR_ULOC_LIST)) {
-                mUsrUlocs = savedInstanceState.getStringArrayList(KEY_USR_ULOC_LIST);
-            }
-            if (savedInstanceState.keySet().contains(KEY_USR_ACT_TYPE_LIST)) {
-                mUsrActTypes = savedInstanceState.getStringArrayList(KEY_USR_ACT_TYPE_LIST);
-            }
-        }
-    }
-
-
-    private void prepareStartTime() {
         mStartTime = Calendar.getInstance().getTime().getTime();
-        String formattedTime = Utils.timeToString(mStartTime);
-        TextView startTimeTV = findViewById(R.id.StartTimeValTV);
-        startTimeTV.setText(formattedTime);
-    }
 
-    private void prepareStartLocation() {
+        prepareTextViews();
+        prepareSpinner(R.id.MicrolocsSp, mUsrUlocs, "Select a location",
+                microlocationItemSelectedListener);
+        prepareSpinner(R.id.ActivityTypesSp, mUsrActTypes, "Select an activity",
+                userActivityItemSelectedListener);
+        prepareButtons();
+    }
+    //endregion
+
+    //region Section: TextView UI
+    // =============================================================================================
+    private void prepareTextViews() {
+        TextView startTimeTV = findViewById(R.id.StartTimeValTV);
+        startTimeTV.setText(Utils.timeToString(mStartTime));
+
         TextView startLocTV = findViewById(R.id.LocValTV);
         startLocTV.setText(Utils.locationToString(mCurLoc));
     }
+    //endregion
 
-    private void prepareSpinner(final int spinnerID, List<String> items) {
+    //region Section: Spinner UI and event listeners
+    // =============================================================================================
+    private void prepareSpinner(int spinnerID, final List<String> items, String hintMessage,
+                                PositionProcessedItemSelectedListener itemSelectedListener) {
         Spinner sp = findViewById(spinnerID);
-        /*ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                stringArrayID, android.R.layout.simple_spinner_item);*/
-        ArrayAdapter<String> adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item , items);
 
+        ArrayAdapter<String> adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, items);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sp.setAdapter(adapter);
 
-        sp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selection = (String) parent.getItemAtPosition(position);
-                switch (parent.getId()) {
-                    case R.id.MicrolocsSp:
-                        if (!selection.equalsIgnoreCase("Select a microlocation")) {
-                            mMicroLocation = selection;
-                        }
-                        break;
-                    case R.id.ActivityTypesSp:
-                        if (!selection.equalsIgnoreCase("Select an activity type")) {
-                            mType = selection;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
+        NothingSelectedSpinnerAdapter spinnerAdapter = new NothingSelectedSpinnerAdapter(
+                adapter, hintMessage, this);
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+        sp.setAdapter(spinnerAdapter);
+
+        sp.setOnItemSelectedListener(itemSelectedListener);
     }
 
+    private abstract class PositionProcessedItemSelectedListener
+            implements AdapterView.OnItemSelectedListener {
 
-    private void prepareBtns() {
+        protected abstract void processItemPosition(int index);
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            processItemPosition((int) id);
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
+        }
+    }
+
+    private PositionProcessedItemSelectedListener microlocationItemSelectedListener
+            = new PositionProcessedItemSelectedListener() {
+        @Override
+        protected void processItemPosition(int index) {
+            mMicroLocation = mUsrUlocs.get(index);
+        }
+    };
+
+    private PositionProcessedItemSelectedListener userActivityItemSelectedListener
+            = new PositionProcessedItemSelectedListener() {
+        @Override
+        protected void processItemPosition(int index) {
+            mType = mUsrActTypes.get(index);
+        }
+    };
+    //endregion
+
+    //region Section: Button UI and event listeners
+    // =============================================================================================
+    private void prepareButtons() {
         Button ulocCustomizeBtn = findViewById(R.id.ulocAddBtn);
         ulocCustomizeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -168,8 +146,8 @@ public class UserActivityEditorActivity extends AppCompatActivity {
             }
         });
 
-        Button typeCutomizeBtn = findViewById(R.id.typeAddBtn);
-        typeCutomizeBtn.setOnClickListener(new View.OnClickListener() {
+        Button typeCustomizeBtn = findViewById(R.id.typeAddBtn);
+        typeCustomizeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.i(TAG, "Pop up custom dialog");
@@ -203,9 +181,13 @@ public class UserActivityEditorActivity extends AppCompatActivity {
             }
         });
     }
+    //endregion
 
+    //region Section: Dialogs for label customization
+    // =============================================================================================
     private void openCustomDialog(ArrayList<String> items) {
         CustomDialog customDialog = CustomDialog.newInstance(items);
         customDialog.show(getSupportFragmentManager(), "Custom Dialog");
     }
+    //endregion
 }
