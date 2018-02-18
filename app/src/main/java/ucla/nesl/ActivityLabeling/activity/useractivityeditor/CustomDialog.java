@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatDialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,67 +22,60 @@ import ucla.nesl.ActivityLabeling.R;
 
 public class CustomDialog extends AppCompatDialogFragment {
 
-    private EditText mInputEt;
-    private ListView mListView;
-    private Button mAddBtn;
+    private static final String KEY_ITEMS = "items";
 
-    private ArrayList<String> mItems;
-
-    CustomListAdapter mItemsAdapter;
+    private CustomListAdapter mItemsAdapter;
 
 
-
-    //TODO: the comment is out-dated
-    /**
-     * Create a new instance of MyDialogFragment, providing "num" as an argument.
-     */
     public static CustomDialog newInstance(ArrayList<String> items) {
         CustomDialog frag = new CustomDialog();
 
-        // Supply num input as an argument.
+        // Pass the parameters into a bundle
         Bundle args = new Bundle();
-        args.putStringArrayList("items", items);
+        args.putStringArrayList(KEY_ITEMS, items);
         frag.setArguments(args);
         return frag;
     }
 
-
-
     @Override
+    @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        //return super.onCreateDialog(savedInstanceState);
+        final ArrayList<String> items = getArguments().getStringArrayList(KEY_ITEMS);
 
-        mItems = getArguments().getStringArrayList("items");
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
 
         View view = inflater.inflate(R.layout.custom_dialog, null);
         builder.setView(view)
-                .setTitle("Customize user defined selections")
+                .setTitle("Customize your labels")
                 .setPositiveButton("Done", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                    }
+                });
 
-            }
-        });
+        // Section of add a new label
+        final EditText inputEt = view.findViewById(R.id.customET);
 
-        mInputEt = view.findViewById(R.id.customET);
-        mAddBtn = view.findViewById(R.id.customAddBtn);
-        mAddBtn.setOnClickListener(new View.OnClickListener (){
+        final Button addBtn = view.findViewById(R.id.customAddBtn);
+        addBtn.setOnClickListener(new View.OnClickListener (){
             @Override
             public void onClick(View v) {
-                String content = mInputEt.getText().toString();
+                String content = inputEt.getText().toString();
                 if (!content.isEmpty()) {
-                    mItems.add(content);
-                    mInputEt.setText("");
+                    items.add(content);
+                    inputEt.setText("");
                     mItemsAdapter.notifyDataSetChanged();
                 }
             }
         });
-        mListView = view.findViewById(R.id.dialogLV);
-        mItemsAdapter = new CustomListAdapter(getContext(), mItems);
-        mListView.setAdapter(mItemsAdapter);
+
+        // Section of existing labels
+        final ListView listView = view.findViewById(R.id.dialogLV);
+        mItemsAdapter = new CustomListAdapter(getContext(), items);
+        listView.setAdapter(mItemsAdapter);
+
         return builder.create();
     }
 

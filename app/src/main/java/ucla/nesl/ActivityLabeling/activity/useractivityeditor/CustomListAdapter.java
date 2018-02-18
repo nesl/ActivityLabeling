@@ -9,7 +9,6 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.zip.Inflater;
 
 import ucla.nesl.ActivityLabeling.R;
 
@@ -32,7 +31,7 @@ public class CustomListAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
+    public String getItem(int position) {
         return mItems.get(position);
     }
 
@@ -48,12 +47,12 @@ public class CustomListAdapter extends BaseAdapter {
                 mItems.get(position).equalsIgnoreCase("Select an activity type")){
             rowView.setVisibility(View.GONE);
             return rowView;
-
         }
+
         final TextView tv = rowView.findViewById(R.id.customTV);
         tv.setText(mItems.get(position));
 
-        final Button btn =  rowView.findViewById(R.id.removeBtn);
+        final Button btn = rowView.findViewById(R.id.removeBtn);
         btn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
@@ -62,6 +61,7 @@ public class CustomListAdapter extends BaseAdapter {
                 rowView.setVisibility(View.INVISIBLE);
             }
         });
+
         return rowView;
     }
 }
