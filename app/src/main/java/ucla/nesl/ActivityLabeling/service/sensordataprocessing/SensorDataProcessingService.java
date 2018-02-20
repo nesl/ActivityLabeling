@@ -16,6 +16,8 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 
 import ucla.nesl.ActivityLabeling.notification.NotificationHelper;
+import ucla.nesl.ActivityLabeling.service.sensordataprocessing.motionactivity.MotionActivityCallback;
+import ucla.nesl.ActivityLabeling.service.sensordataprocessing.motionactivity.MotionActivityDataCollector;
 import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
 import ucla.nesl.ActivityLabeling.utils.ToastShortcut;
 

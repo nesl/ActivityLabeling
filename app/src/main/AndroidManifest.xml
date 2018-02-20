@@ -55,7 +55,7 @@
             android:enabled="true"
             android:exported="true" />
         <service
-            android:name=".service.sensordataprocessing.DetectedActivitiesIntentService"
+            android:name=".service.sensordataprocessing.motionactivity.ActivityRecognitionIntentService"
             android:enabled="true"
             android:exported="true" />
 

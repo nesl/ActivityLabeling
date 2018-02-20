@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling.service.sensordataprocessing;
+package ucla.nesl.ActivityLabeling.service.sensordataprocessing.motionactivity;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 

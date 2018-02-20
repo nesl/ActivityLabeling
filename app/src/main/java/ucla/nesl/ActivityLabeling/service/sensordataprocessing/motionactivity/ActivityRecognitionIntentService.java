@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling.service.sensordataprocessing;
+package ucla.nesl.ActivityLabeling.service.sensordataprocessing.motionactivity;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -9,14 +9,14 @@ import android.util.Log;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
-public class DetectedActivitiesIntentService extends IntentService {
+public class ActivityRecognitionIntentService extends IntentService {
 
     static final String MOTION_ACTIVITY_BROADCAST = ".broadcast";
 
     static final String EXTRA_MOTION_ACTIVITY_RESULT = ".motionActivityResult";
 
-    private static final String TAG = DetectedActivitiesIntentService.class.getSimpleName();
-    public DetectedActivitiesIntentService() {
+    private static final String TAG = ActivityRecognitionIntentService.class.getSimpleName();
+    public ActivityRecognitionIntentService() {
         super(TAG);
     }
 

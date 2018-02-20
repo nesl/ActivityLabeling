@@ -1,4 +1,4 @@
-package ucla.nesl.ActivityLabeling.service.sensordataprocessing;
+package ucla.nesl.ActivityLabeling.service.sensordataprocessing.motionactivity;
 
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -38,13 +38,13 @@ public class MotionActivityDataCollector {
 
         activityRecognitionClient = ActivityRecognition.getClient(context);
 
-        Intent intent = new Intent(context, DetectedActivitiesIntentService.class);
+        Intent intent = new Intent(context, ActivityRecognitionIntentService.class);
         activityRecognitionPendingIntent = PendingIntent.getService(
                 context, PENDING_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         motionActivityReceiver = new MotionActivityResultReceiver();
         LocalBroadcastManager.getInstance(context).registerReceiver(motionActivityReceiver,
-                new IntentFilter(DetectedActivitiesIntentService.MOTION_ACTIVITY_BROADCAST));
+                new IntentFilter(ActivityRecognitionIntentService.MOTION_ACTIVITY_BROADCAST));
     }
 
     public void start() {
@@ -80,7 +80,7 @@ public class MotionActivityDataCollector {
         @Override
         public void onReceive(Context context, Intent intent) {
             ActivityRecognitionResult activityRecognitionResult = intent.getParcelableExtra(
-                    DetectedActivitiesIntentService.EXTRA_MOTION_ACTIVITY_RESULT);
+                    ActivityRecognitionIntentService.EXTRA_MOTION_ACTIVITY_RESULT);
             mActivityCallback.onMotionActivityResult(activityRecognitionResult);
         }
     }
