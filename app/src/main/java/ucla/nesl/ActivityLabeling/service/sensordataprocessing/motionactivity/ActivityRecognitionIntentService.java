@@ -11,18 +11,14 @@ import com.google.android.gms.location.DetectedActivity;
 
 public class ActivityRecognitionIntentService extends IntentService {
 
+    private static final String TAG = ActivityRecognitionIntentService.class.getSimpleName();
+
     static final String MOTION_ACTIVITY_BROADCAST = ".broadcast";
 
     static final String EXTRA_MOTION_ACTIVITY_RESULT = ".motionActivityResult";
 
-    private static final String TAG = ActivityRecognitionIntentService.class.getSimpleName();
     public ActivityRecognitionIntentService() {
         super(TAG);
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
     }
 
     @Override
@@ -30,8 +26,7 @@ public class ActivityRecognitionIntentService extends IntentService {
         ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
 
         DetectedActivity detectedActivity = result.getMostProbableActivity();
-        Log.i(TAG, "activities detected");
-        Log.i(TAG, detectedActivity.toString() + " " + detectedActivity.getConfidence() + "%");
+        Log.i(TAG, "activities detected: " + detectedActivity.toString());
 
         Intent intentToSend = new Intent(MOTION_ACTIVITY_BROADCAST);
         intentToSend.putExtra(EXTRA_MOTION_ACTIVITY_RESULT, result);
