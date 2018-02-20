@@ -103,7 +103,9 @@ public class DebugActivity extends AppCompatActivity {
                 "**** About service ****",
                 "Created time: " + Utils.timeToString(mService.getCreatedTimestampMs()),
                 "Location: " + Utils.locationToString(mService.getCurrentLocation()),
-                "Motion activity: " + mService.getCurrentMotionActivity()
+                "Motion activity: " + mService.getCurrentMotionActivity(),
+                "",
+                "Updated time: " + Utils.timeToString(System.currentTimeMillis())
         ));
     }
     //endregion
