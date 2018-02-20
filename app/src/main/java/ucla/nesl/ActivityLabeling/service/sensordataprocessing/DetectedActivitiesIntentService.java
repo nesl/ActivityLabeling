@@ -11,9 +11,9 @@ import com.google.android.gms.location.DetectedActivity;
 
 public class DetectedActivitiesIntentService extends IntentService {
 
-    static final String ACTION_BROADCAST = ".broadcast";
+    static final String MOTION_ACTIVITY_BROADCAST = ".broadcast";
 
-    static final String EXTRA_DETECTED_ACTIVITY = ".detectedActivity";
+    static final String EXTRA_MOTION_ACTIVITY_RESULT = ".motionActivityResult";
 
     private static final String TAG = DetectedActivitiesIntentService.class.getSimpleName();
     public DetectedActivitiesIntentService() {
@@ -22,7 +22,6 @@ public class DetectedActivitiesIntentService extends IntentService {
 
     @Override
     public void onCreate() {
-        Log.i(TAG, "onCreate");
         super.onCreate();
     }
 
@@ -31,15 +30,11 @@ public class DetectedActivitiesIntentService extends IntentService {
         ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
 
         DetectedActivity detectedActivity = result.getMostProbableActivity();
-
-
-        // Log each activity.
         Log.i(TAG, "activities detected");
         Log.i(TAG, detectedActivity.toString() + " " + detectedActivity.getConfidence() + "%");
 
-        // Notify anyone listening for broadcasts about the new location.
-        Intent intentToSend = new Intent(ACTION_BROADCAST);
-        intentToSend.putExtra(EXTRA_DETECTED_ACTIVITY, detectedActivity);
+        Intent intentToSend = new Intent(MOTION_ACTIVITY_BROADCAST);
+        intentToSend.putExtra(EXTRA_MOTION_ACTIVITY_RESULT, result);
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intentToSend);
     }
 }

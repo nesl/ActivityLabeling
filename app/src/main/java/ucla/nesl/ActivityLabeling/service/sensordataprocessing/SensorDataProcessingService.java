@@ -1,30 +1,19 @@
 package ucla.nesl.ActivityLabeling.service.sensordataprocessing;
 
-import android.app.ActivityManager;
-import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Binder;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.google.android.gms.location.ActivityRecognitionClient;
+import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
 import ucla.nesl.ActivityLabeling.notification.NotificationHelper;
 import ucla.nesl.ActivityLabeling.utils.SharedPreferenceHelper;
@@ -47,20 +36,6 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
 
     private static final String TAG = SensorDataProcessingService.class.getSimpleName();
 
-    private static final long DETECTION_INTERVAL_IN_MILLISECONDS = 10000L;
-
-    /**
-     * The desired interval for location updates. Inexact. Updates may be more or less frequent.
-     */
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
-
-    /**
-     * The fastest rate for active location updates. Exact. Updates will never be more frequent
-     * than this value.
-     */
-    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS =
-            UPDATE_INTERVAL_IN_MILLISECONDS / 2;
-
     // Binder
     private final IBinder mBinder = new LocalBinder();
 
@@ -75,15 +50,11 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
     private AggressiveLocationDataCollector locationCollector;
     private Location currentLocation;
 
-    /**
-     * The entry point for interacting with activity recognition.
-     */
-    private ActivityRecognitionClient mActivityRecognitionClient;
-
+    // Motion activity collection proxy and activity status
+    private MotionActivityDataCollector motionActivityCollector;
     private DetectedActivity mLastDetectedActivity = null;
 
-    private DetectedActivityReceiver mReceiver;
-
+    // Shared preference
     private SharedPreferenceHelper preferenceHelper;
     private SharedPreferences mSharedPreferences;
 
@@ -116,10 +87,8 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         locationCollector.start();
 
         // Initialize motion activity data source
-        mActivityRecognitionClient = new ActivityRecognitionClient(this);
-        mReceiver = new DetectedActivityReceiver();
-        LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver,
-                new IntentFilter(DetectedActivitiesIntentService.ACTION_BROADCAST));
+        motionActivityCollector = new MotionActivityDataCollector(this, motionActivityCallback);
+        motionActivityCollector.start();
 
         // Declare itself as a foreground service
         notificationHelper.serviceNotifyStartingForeground(
@@ -140,7 +109,7 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         //TODO: re-examine this method
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
+        //LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
 
         locationCollector.stop();
 
@@ -219,125 +188,29 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
     };
     //endregion
 
-
-
-    /**
-     * Returns true if this is a foreground service.
-     *
-     * @param context The {@link Context}.
-     */
-    public boolean serviceIsRunningInForeground(Context context) {
-        ActivityManager manager = (ActivityManager) context.getSystemService(
-                Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(
-                Integer.MAX_VALUE)) {
-            if (getClass().getName().equals(service.service.getClassName())) {
-                if (service.foreground) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    private class DetectedActivityReceiver extends BroadcastReceiver {
+    //region Section: Motion activity callback
+    // =============================================================================================
+    private MotionActivityCallback motionActivityCallback = new MotionActivityCallback() {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            DetectedActivity detectedActivity = intent.getParcelableExtra(DetectedActivitiesIntentService.EXTRA_DETECTED_ACTIVITY);
+        public void onMotionActivityResult(ActivityRecognitionResult result) {
+            DetectedActivity detectedActivity = result.getMostProbableActivity();
 
             if (detectedActivity != null && mLastDetectedActivity != null) {
                 if (detectedActivity.getType() != mLastDetectedActivity.getType()) {
-                    Log.i(TAG, "Different detected activities should send out notification.");
-
-                    boolean isForeground = serviceIsRunningInForeground(SensorDataProcessingService.this);
-                    boolean locationChangeNotification = preferenceHelper.getSendingNotificationOnLocationChanged();
-                    if (isForeground && locationChangeNotification) {
+                    if (preferenceHelper.getSendingNotificationOnLocationChanged()) {
                         notificationHelper.sendNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
                     }
-                } else {
-                    Log.i(TAG, "Same detected activities.");
                 }
             }
             mLastDetectedActivity = detectedActivity;
         }
-    }
+    };
+    //endregion
 
-    public Location getCurrentLocation() {
-        return currentLocation;
-    }
-
-    public DetectedActivity getCurrentMotionActivity() {
-        return mLastDetectedActivity;
-    }
-
-
-    /**
-     * Registers for activity recognition updates using
-     * {@link ActivityRecognitionClient#requestActivityUpdates(long, PendingIntent)}.
-     * Registers success and failure callbacks.
-     */
-    public void sendActivityUpdatesRequest() {
-
-        Task<Void> task = mActivityRecognitionClient.requestActivityUpdates(
-                DETECTION_INTERVAL_IN_MILLISECONDS,
-                getActivityDetectionPendingIntent());
-
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                Toast.makeText(getApplicationContext(), "activity update request enabled",
-                        Toast.LENGTH_SHORT)
-                        .show();
-            }
-        });
-
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                //Log.w(TAG, "activity update request failed");
-                toastHelper.showShort("activity update request failed");
-            }
-        });
-    }
-
-    /**
-     * Removes activity recognition updates using
-     * {@link ActivityRecognitionClient#removeActivityUpdates(PendingIntent)}. Registers success and
-     * failure callbacks.
-     */
-    public void removeActivityUpdates() {
-        Task<Void> task = mActivityRecognitionClient.removeActivityUpdates(
-                getActivityDetectionPendingIntent());
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void result) {
-                toastHelper.showShort("activity update remove success");
-            }
-        });
-
-        task.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.w(TAG, "Failed to enable activity recognition.");
-                toastHelper.showShort("activity update remove failed");
-            }
-        });
-    }
-
-    /**
-     * Gets a PendingIntent to be sent for each activity detection.
-     */
-    private PendingIntent getActivityDetectionPendingIntent() {
-        Intent intent = new Intent(this, DetectedActivitiesIntentService.class);
-
-        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
-        // requestActivityUpdates() and removeActivityUpdates().
-        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
+    //region Section: Shared preference monitoring
+    // =============================================================================================
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        //TODO: comments here, not sure what's the intention here
         if (key.equals(SharedPreferenceHelper.KEY_LOCATION_UPDATE_INTERVAL) ||
                 key.equals(SharedPreferenceHelper.KEY_LOCATION_MINIMUM_DISPLACEMENT)) {
             Log.i(TAG, "Location Setting Changed");
@@ -347,12 +220,25 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
             );
         } else if (key.equals(SharedPreferenceHelper.KEY_ACTIVITY_DETECTION_INTERVAL)) {
             Log.i(TAG, "Activity Setting Changed");
-            removeActivityUpdates();
-            sendActivityUpdatesRequest();
+            //removeActivityUpdates();
+            //sendActivityUpdatesRequest();
         }
     }
+    //endregion
 
+    //region Section: Public facing methods to fetch sensing data
+    // =============================================================================================
     public long getCreatedTimestampMs() {
         return serviceCreatedTimestampMs;
     }
+
+    public Location getCurrentLocation() {
+        return currentLocation;
+    }
+
+    public DetectedActivity getCurrentMotionActivity() {
+        return mLastDetectedActivity;
+    }
+    //endregion
+
 }

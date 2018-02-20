@@ -43,6 +43,13 @@
                 android:value="ucla.nesl.ActivityLabeling.activity.main.MainActivity" />
         </activity>
 
+        <activity android:name=".activity.setting.SettingActivity" />
+
+        <activity
+            android:name=".activity.debug.DebugActivity"
+            android:label="@string/title_activity_debug"
+            android:theme="@style/AppTheme.NoActionBar" />
+
         <service
             android:name=".service.sensordataprocessing.SensorDataProcessingService"
             android:enabled="true"
@@ -52,11 +59,6 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".activity.setting.SettingActivity" />
-        <activity
-            android:name=".activity.debug.DebugActivity"
-            android:label="@string/title_activity_debug"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

@@ -1,15 +1,18 @@
 package ucla.nesl.ActivityLabeling.service.sensordataprocessing;
 
-import android.app.IntentService;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.ActivityRecognitionResult;
 
 /**
@@ -20,39 +23,37 @@ import com.google.android.gms.location.ActivityRecognitionResult;
 
 public class MotionActivityDataCollector {
 
-    private static final long MOTION_ACTIVITY_FETCH_FREQUENCY_SEC = 10 * 1000L;  // 10 seconds
+    private static final long MOTION_ACTIVITY_FETCH_FREQUENCY_MS = 10 * 1000L;  // 10 seconds
 
-    private Context mContext;
+    private static final int PENDING_INTENT_REQUEST_CODE = 0;
+
     private MotionActivityCallback mActivityCallback;
 
-    private GoogleApiClient googleApiClient;
-
+    private ActivityRecognitionClient activityRecognitionClient;
+    private PendingIntent activityRecognitionPendingIntent;
+    private MotionActivityResultReceiver motionActivityReceiver;
 
     public MotionActivityDataCollector(Context context, MotionActivityCallback activityCallback) {
-        mContext = context;
         mActivityCallback = activityCallback;
 
-        googleApiClient = new GoogleApiClient.Builder(context)
-                .addApi(ActivityRecognition.API)
-                .addConnectionCallbacks(connectionCallbacks)
-                .addOnConnectionFailedListener(onConnectionFailedListener)
-                .build();
+        activityRecognitionClient = ActivityRecognition.getClient(context);
 
-        googleApiClient.connect();
+        Intent intent = new Intent(context, DetectedActivitiesIntentService.class);
+        activityRecognitionPendingIntent = PendingIntent.getService(
+                context, PENDING_INTENT_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        motionActivityReceiver = new MotionActivityResultReceiver();
+        LocalBroadcastManager.getInstance(context).registerReceiver(motionActivityReceiver,
+                new IntentFilter(DetectedActivitiesIntentService.MOTION_ACTIVITY_BROADCAST));
     }
 
     public void start() {
-        Intent intent = new Intent(mContext, ActivityRecognizationIntentService.class);
-        //TODO: what's the constant?
-        PendingIntent pendingIntent = PendingIntent.getService(mContext,1, intent,PendingIntent.FLAG_UPDATE_CURRENT);
-
-        //TODO why it's obselete?
-        //TODO what's the constant?
-        ActivityRecognition.ActivityRecognitionApi.requestActivityUpdates(googleApiClient,1, pendingIntent);
+        activityRecognitionClient.requestActivityUpdates(
+                MOTION_ACTIVITY_FETCH_FREQUENCY_MS, activityRecognitionPendingIntent);
     }
 
     public void stop() {
-        //TODO
+        activityRecognitionClient.removeActivityUpdates(activityRecognitionPendingIntent);
     }
 
 
@@ -75,18 +76,12 @@ public class MotionActivityDataCollector {
     };
 
 
-    private class ActivityRecognizationIntentService extends IntentService {
-
-        public ActivityRecognizationIntentService() {
-            super("ActivityRecognizationIntentService");
-        }
-
+    private class MotionActivityResultReceiver extends BroadcastReceiver {
         @Override
-        protected void onHandleIntent(Intent intent) {
-            if (ActivityRecognitionResult.hasResult(intent)) {
-                mActivityCallback.onMotionActivityResult(
-                        ActivityRecognitionResult.extractResult(intent));
-            }
+        public void onReceive(Context context, Intent intent) {
+            ActivityRecognitionResult activityRecognitionResult = intent.getParcelableExtra(
+                    DetectedActivitiesIntentService.EXTRA_MOTION_ACTIVITY_RESULT);
+            mActivityCallback.onMotionActivityResult(activityRecognitionResult);
         }
     }
 }
