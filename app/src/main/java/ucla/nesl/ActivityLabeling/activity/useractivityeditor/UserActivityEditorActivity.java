@@ -23,6 +23,7 @@ import ucla.nesl.ActivityLabeling.activity.main.MainActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivity;
 import ucla.nesl.ActivityLabeling.storage.UserActivityStorageManager;
 import ucla.nesl.ActivityLabeling.uiwidget.NothingSelectedSpinnerAdapter;
+import ucla.nesl.ActivityLabeling.utils.ToastShortcut;
 import ucla.nesl.ActivityLabeling.utils.Utils;
 
 
@@ -33,6 +34,8 @@ public class UserActivityEditorActivity extends AppCompatActivity {
     public static final String ACTIVITY_INFO = "Activity_Info";
 
     private long mStartTime;
+    private Location mCurLoc;
+
     private String mMicroLocation;
     private String mType;
 
@@ -40,8 +43,7 @@ public class UserActivityEditorActivity extends AppCompatActivity {
     private ArrayList<String> mUsrActTypes;
 
     private UserActivityStorageManager mStoreManager;
-
-    private Location mCurLoc;
+    private ToastShortcut toastHelper;
 
 
     //region Section: Activity life cycle
@@ -59,11 +61,11 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
         mCurLoc = getIntent().getExtras().getParcelable(MainActivity.INTENT_KEY_CURRENT_LOCATION);
 
+        mStartTime = Calendar.getInstance().getTime().getTime();
+
         mStoreManager = new UserActivityStorageManager(this);
         mUsrActTypes = mStoreManager.loadUsrActTypes();
         mUsrUlocs = mStoreManager.loadUsrUlocs();
-
-        mStartTime = Calendar.getInstance().getTime().getTime();
 
         prepareTextViews();
         prepareSpinner(R.id.MicrolocsSp, mUsrUlocs, "Select a location",
@@ -71,6 +73,8 @@ public class UserActivityEditorActivity extends AppCompatActivity {
         prepareSpinner(R.id.ActivityTypesSp, mUsrActTypes, "Select an activity",
                 userActivityItemSelectedListener);
         prepareButtons();
+
+        toastHelper = new ToastShortcut(this);
     }
     //endregion
 
@@ -109,7 +113,9 @@ public class UserActivityEditorActivity extends AppCompatActivity {
 
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            processItemPosition((int) id);
+            if (id != -1L) {
+                processItemPosition((int) id);
+            }
         }
 
         @Override
@@ -162,6 +168,12 @@ public class UserActivityEditorActivity extends AppCompatActivity {
                 // Update labels of micro-location and activity spinners
                 mStoreManager.saveUsrUloc(mUsrUlocs);
                 mStoreManager.saveUserActType(mUsrActTypes);
+
+                // Check all the info have been filled properly
+                if (mMicroLocation == null || mType == null) {
+                    toastHelper.showShort("Please enter location and activity");
+                    return;
+                }
 
                 // Create a UserActivity entry
                 EditText description = findViewById(R.id.DescriptionET);

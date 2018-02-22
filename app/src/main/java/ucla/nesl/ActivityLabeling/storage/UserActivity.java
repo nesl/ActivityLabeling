@@ -56,14 +56,24 @@ public class UserActivity implements Parcelable {
         return endTimeMs != Utils.INVALID_TIME;
     }
 
-    public void setStartLocation(@NonNull Location loc) {
-        startLatitude = loc.getLatitude();
-        startLongitude = loc.getLongitude();
+    public void setStartLocation(Location loc) {
+        if (loc == null) {
+            startLatitude = Utils.INVALID_LOCATION_VAL;
+            startLongitude = Utils.INVALID_LOCATION_VAL;
+        } else {
+            startLatitude = loc.getLatitude();
+            startLongitude = loc.getLongitude();
+        }
     }
 
-    public void setEndLocation(@NonNull Location loc) {
-        endLatitude = loc.getLatitude();
-        endLongitude = loc.getLongitude();
+    public void setEndLocation(Location loc) {
+        if (loc == null) {
+            endLatitude = Utils.INVALID_LOCATION_VAL;
+            endLongitude = Utils.INVALID_LOCATION_VAL;
+        } else {
+            endLatitude = loc.getLatitude();
+            endLongitude = loc.getLongitude();
+        }
     }
 
     public String toCSVLine() {
