@@ -91,10 +91,6 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         // Initialize motion activity data source
         motionActivityCollector = new MotionActivityDataCollector(this, motionActivityCallback);
         motionActivityCollector.start();
-
-        // Declare itself as a foreground service
-        notificationHelper.serviceNotifyStartingForeground(
-                this, NotificationHelper.Type.FOREGROUND_SERVICE);
     }
 
     @Override
@@ -103,7 +99,11 @@ public class SensorDataProcessingService extends Service implements SharedPrefer
         //notificationHelper.cancelNotification(NotificationHelper.Type.ACTIVITY_CHANGED);
         //notificationHelper.cancelNotification(NotificationHelper.Type.LOCATION_CHANGED);
         // Tells the system to not try to recreate the service after it has been killed
-        return START_NOT_STICKY;
+
+        // Declare itself as a foreground service
+        notificationHelper.serviceNotifyStartingForeground(
+                this, NotificationHelper.Type.FOREGROUND_SERVICE);
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override

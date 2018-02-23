@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -240,6 +241,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void startDataCollection() {
         Intent intent = new Intent(this, SensorDataProcessingService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
         bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
         setDataCollectionButtonState(true);
     }

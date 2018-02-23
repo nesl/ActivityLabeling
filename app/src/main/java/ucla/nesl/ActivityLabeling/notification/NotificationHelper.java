@@ -9,10 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.util.SparseArray;
 
-import ucla.nesl.ActivityLabeling.activity.main.MainActivity;
 import ucla.nesl.ActivityLabeling.R;
+import ucla.nesl.ActivityLabeling.activity.main.MainActivity;
 
 /**
  * Created by timestring on 2/12/18.
@@ -24,7 +25,7 @@ import ucla.nesl.ActivityLabeling.R;
 public class NotificationHelper {
 
     public enum Type {
-        FOREGROUND_SERVICE(12345),
+        FOREGROUND_SERVICE(1),
         LOCATION_CHANGED(12346),
         ACTIVITY_CHANGED(12347);
 
@@ -84,7 +85,7 @@ public class NotificationHelper {
                         .setContentText("Monitoring location and user activity")
                         .setTicker("Monitoring location and user activity")
                         .setOngoing(true);
-
+                Log.i("notification helper", "try to make foreground service");
                 break;
             case LOCATION_CHANGED:
                 builder.setAutoCancel(true)
@@ -92,12 +93,14 @@ public class NotificationHelper {
                         .setContentText("Please update your activity information")
                         .setTicker("Please update your activity information")
                         .setPriority(Notification.PRIORITY_DEFAULT);
+                break;
             case ACTIVITY_CHANGED:
                 builder.setAutoCancel(true)
                         .setContentTitle("Motion status Changed")
                         .setContentText("Please update your activity information")
                         .setTicker("Please update your activity information")
                         .setPriority(Notification.PRIORITY_DEFAULT);
+                break;
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -123,6 +126,5 @@ public class NotificationHelper {
     public void serviceNotifyStartingForeground(Service service, Type type) {
         service.startForeground(type.getID(), getNotification(type));
     }
-
 
 }
